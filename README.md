@@ -1,16 +1,12 @@
 # Explorer Backend
-The backend part of the explorer project which can be found [here](https://github.com/teco-kit/explorer/blob/master/README.md).
+The backend part of the edge-ml project which can be found [here](https://github.com/edge-ml).
+[![Tests](https://github.com/edge-ml/backend/actions/workflows/tests.yml/badge.svg)](https://github.com/edge-ml/backend/actions/workflows/tests.yml)
+[![Publish Docker image](https://github.com/edge-ml/backend/actions/workflows/publishDocker.yml/badge.svg)](https://github.com/edge-ml/backend/actions/workflows/publishDocker.yml)
 
-![Tests](https://github.com/teco-kit/explorer-backend/workflows/Tests/badge.svg?branch=master)
-[![Publish Docker image](https://github.com/teco-kit/explorer-backend/actions/workflows/publishDocker.yml/badge.svg)](https://github.com/teco-kit/explorer-backend/actions/workflows/main.yml)
-
-A REST API for the <a href="https://github.com/teco-kit/explorer-backend">explorer backend</a>.
-
-You can find an UML for the database scheme 
-<a href="https://drive.google.com/open?id=15c_GufI5fqn6T1DA8TLKNCUdbo4u7VCh">here</a>.
+A REST API for the <a href="https://github.com/edge-ml/backend">explorer backend</a>.
 
 # Getting started
-Before you get started clone *this repository* and the <a href="https://github.com/teco-kit/explorer-auth">authentication repository</a>
+Before you get started clone *this repository* and the <a href="https://github.com/edge-ml/authentication/">authentication repository</a>
 and make sure, both repositories are located in the same folder.
 
 You can either run the application within a docker container or directly.
@@ -19,7 +15,7 @@ You can either run the application within a docker container or directly.
 If you want to run the application locally, please follow the 
 <a href="https://docs.mongodb.com/manual/installation/">mongoDB installation guide</a>.
 
-Please make sure mongoDB and <a href="https://github.com/teco-kit/explorer-auth">Explorer authentication</a>
+Please make sure mongoDB and <a href="https://github.com/edge-ml/authentication/">Edge-ml authentication</a>
 is up and running.
 
 Then run the following commands:
