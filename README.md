@@ -1,4 +1,4 @@
-# Explorer Backend
+# Backend
 The backend part of the edge-ml project which can be found [here](https://github.com/edge-ml).
 [![Tests](https://github.com/edge-ml/backend/actions/workflows/tests.yml/badge.svg)](https://github.com/edge-ml/backend/actions/workflows/tests.yml)
 [![Publish Docker image](https://github.com/edge-ml/backend/actions/workflows/publishDocker.yml/badge.svg)](https://github.com/edge-ml/backend/actions/workflows/publishDocker.yml)
