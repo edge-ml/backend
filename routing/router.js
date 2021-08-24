@@ -8,7 +8,6 @@ const subroutes = {
 	datasets: require('./routes/dataset'),
 	users: require('./routes/user'),
 	firmware: require('./routes/firmware'),
-	label: require('./routes/labelType'),
 	labelDefinitions: require('./routes/labelDefinition'),
 	device: require('./routes/device'),
 	service: require('./routes/service'),
