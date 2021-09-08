@@ -82,7 +82,7 @@ const dataset = {
   labelings: [],
   video: {},
   results: [],
-  name: "TestDataset"
+  name: "TestDataset",
 };
 
 console.log("Testing with config:");
@@ -105,7 +105,6 @@ describe("Testing API Routes", () => {
     mongoose.connection.db.dropDatabase();
     done();
   });
-
 
   it("Generating project", (done) => {
     request
@@ -161,8 +160,8 @@ describe("Testing API Routes", () => {
 
     it.skip("Invalid token provided", (done) => {
       nock("http://explorer.dmz.teco.edu/auth")
-      .post("/authenticate")
-      .reply(401, { error: "Unauthorized" });
+        .post("/authenticate")
+        .reply(401, { error: "Unauthorized" });
       request
         .put("/api/users")
         .set({
@@ -294,7 +293,7 @@ describe("Testing API Routes", () => {
       var dataset = await DatasetModel.find({});
       dataset = dataset[1];
       expect(dataset.timeSeries.length).to.equal(1);
-      expect(dataset.start).to.equal(1)
+      expect(dataset.start).to.equal(1);
       expect(dataset.end).to.equal(8);
       dataset.timeSeries = [];
       dataset.save();
@@ -315,86 +314,12 @@ describe("Testing API Routes", () => {
     });
   });
 
-  describe("Testing /labelTypes...", () => {
-    it("Saves a new label", (done) => {
-      request
-        .post("/api/labelTypes")
-        .set({ Authorization: token, project: project._id })
-        .send({ name: "Label1" })
-        .expect(201)
-        .end((err, res) => {
-          labelType = res.body;
-          done(err);
-        });
-    });
-
-    it("Returns a list of labels", (done) => {
-      request
-        .get("/api/labelTypes")
-        .set({ Authorization: token, project: project._id })
-        .expect(200)
-        .end((err, res) => {
-          expect(res.body).to.be.an("array");
-          done(err);
-        });
-    });
-
-    it("Returns a label by id", (done) => {
-      request
-        .get(`/api/labelTypes/${labelType._id}`)
-        .set({ Authorization: token, project: project._id })
-        .expect(200)
-        .end((err, res) => {
-          expect(res.body).to.have.all.keys("_id", "name", "__v");
-          done(err);
-        });
-    });
-
-    it("Update a label by id", (done) => {
-      request
-        .put(`/api/labelTypes/${labelType._id}`)
-        .set({ Authorization: token, project: project._id })
-        .send({ name: "LabelNew" })
-        .expect(200)
-        .end((err, res) => {
-          expect(res.body.message).to.be.equal(
-            `updated labelType with id: ${labelType._id}`
-          );
-          done(err);
-        });
-    });
-
-    it("Delete a label by id", (done) => {
-      request
-        .delete(`/api/labelTypes/${labelType._id}`)
-        .set({ Authorization: token, project: project._id })
-        .expect(200)
-        .end((err, res) => {
-          expect(res.body.message).to.be.equal(
-            `deleted labelType with id: ${labelType._id}`
-          );
-          done(err);
-        });
-    });
-
-    it("Delete all labels", (done) => {
-      request
-        .delete(`/api/labelTypes`)
-        .set({ Authorization: token, project: project._id })
-        .expect(200)
-        .end((err, res) => {
-          expect(res.body.message).to.be.equal(`deleted all labelTypes`);
-          done(err);
-        });
-    });
-  });
-
   describe("Testing /labelDefinitions...", () => {
     it("Saves a new labelDefinition", (done) => {
       request
         .post("/api/labelDefinitions")
         .set({ Authorization: token, project: project._id })
-        .send({ labels: [] })
+        .send({ labels: [], name: "testName" })
         .expect(201)
         .end((err, res) => {
           labelDefinition = res.body;
@@ -408,7 +333,7 @@ describe("Testing API Routes", () => {
         .set({ Authorization: token, project: project._id })
         .expect(200)
         .end((err, res) => {
-          expect(res.body).to.be.an("array");
+          expect(res.body).to.have.all.keys("labelDefinitions", "labelTypes");
           done(err);
         });
     });
@@ -419,7 +344,7 @@ describe("Testing API Routes", () => {
         .set({ Authorization: token, project: project._id })
         .expect(200)
         .end((err, res) => {
-          expect(res.body).to.have.all.keys("_id", "labels", "__v");
+          expect(res.body).to.have.all.keys("_id", "labels", "__v", "name");
           done(err);
         });
     });
@@ -789,25 +714,14 @@ describe("Testing API Routes", () => {
   });
 
   describe("Testing /experiments...", () => {
-    it("Saves a new labelTypes", (done) => {
-      request
-        .post("/api/labelTypes")
-        .set({ Authorization: token, project: project._id })
-        .send({ name: "Label1", color: "#ffffff" })
-        .expect(201)
-        .end((err, res) => {
-          labelType = res.body;
-          done(err);
-        });
-    });
-
     it("Saves a new labelDefinitions", (done) => {
       request
         .post("/api/labelDefinitions")
         .set({ Authorization: token, project: project._id })
-        .send({ labels: [labelType._id], name: "TestLabeling" })
+        .send({ labels: [{ name: "Label1", color: "#ffffff" }], name: "TestLabeling" })
         .expect(201)
         .end((err, res) => {
+          labelType = {_id: res.body.labels[0]}
           labelDefinition = res.body;
           done(err);
         });
@@ -1051,7 +965,7 @@ describe("Testing API Routes", () => {
         request
           .post("/api/labelDefinitions")
           .set({ Authorization: token, project: project._id })
-          .send({ labels: [] })
+          .send({ labels: [], name: "testLabel2" })
           .expect(201)
           .end((err, res) => {
             labelDefinition = res.body;
@@ -1242,10 +1156,6 @@ describe("Testing API Routes", () => {
           .send({ generation: 2 })
           .expect(200)
           .end((err, res) => {
-            console.log(err)
-            /*expect(res.body.message).to.be.equal(
-              `updated dataset with id: ${dataset._id}`
-            );*/
             done(err);
           });
       });

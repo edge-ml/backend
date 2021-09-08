@@ -10,7 +10,8 @@ const ProjectModel = require("../models/project").model;
 async function getLabelDefinitions(ctx) {
   const project = await ProjectModel.findOne({ _id: ctx.header.project });
   const labelDefinitions = await Model.find({ _id: project.labelDefinitions });
-  ctx.body = labelDefinitions;
+  const labelTypes = await LabelModel.find({ _id: project.labelTypes });
+  ctx.body = { labelDefinitions: labelDefinitions, labelTypes: labelTypes };
   ctx.status = 200;
   return ctx;
 }
@@ -38,15 +39,35 @@ async function getLabelDefinitionById(ctx) {
  * create a new labelDefinition
  */
 async function createLabelDefinition(ctx) {
-  const project = await ProjectModel.findOne({ _id: ctx.header.project });
-  const document = new Model(ctx.request.body);
-  await document.save();
-  await ProjectModel.findByIdAndUpdate(ctx.header.project, {
-    $push: { labelDefinitions: document._id },
-  });
-  ctx.body = document;
-  ctx.status = 201;
-  return ctx;
+  try {
+    const project = await ProjectModel.findOne({ _id: ctx.header.project });
+    var document;
+    if (
+      ctx.request.body.labels &&
+      ctx.request.body.labels.every((elm) => typeof elm === "object")
+    ) {
+      const labels = await LabelModel.insertMany(ctx.request.body.labels);
+      ctx.request.body.labels = undefined;
+      const labelIds = labels.map((elm) => elm._id);
+      document = new Model({ ...ctx.request.body, labels: labelIds });
+      await ProjectModel.findByIdAndUpdate(ctx.header.project, {
+        $push: { labelTypes: labelIds },
+      });
+    } else {
+      document = new Model(ctx.request.body);
+    }
+    await document.save();
+    await ProjectModel.findByIdAndUpdate(ctx.header.project, {
+      $push: { labelDefinitions: document._id },
+    });
+    ctx.body = document;
+    ctx.status = 201;
+    return ctx;
+  } catch (e) {
+    ctx.body = { error: e };
+    ctx.status = 500;
+    return ctx;
+  }
 }
 
 /**
@@ -110,6 +131,45 @@ async function deleteLabelDefinitionById(ctx) {
   }
 }
 
+async function addLabelTypes(ctx) {
+  const project = await ProjectModel.findOne({ _id: ctx.header.project });
+  if (project.labelDefinitions.includes(ctx.params.id)) {
+    const labelTypes = await LabelModel.insertMany(ctx.request.body);
+    const labelIds = labelTypes.map((elm) => elm._id);
+    await ProjectModel.findByIdAndUpdate(ctx.header.project, {
+      $push: { labelTypes: labelIds },
+    });
+    await Model.findByIdAndUpdate(ctx.params.id, {
+      $push: { labels: labelIds },
+    });
+    ctx.body = { message: "Added labelTypes" };
+    ctx.status = 200;
+  } else {
+    ctx.body = { error: "Forbidden" };
+    ctx.status = 403;
+  }
+  return ctx;
+}
+
+async function deleteLabelTypes(ctx) {
+  const project = await ProjectModel.findOne({ _id: ctx.header.project });
+  if (project.labelDefinitions.includes(ctx.params.id)) {
+    const labelTypes = await LabelModel.deleteMany({ _id: ctx.request.body });
+    await ProjectModel.findByIdAndUpdate(ctx.header.project, {
+      $pull: { labelTypes: ctx.request.body.labels },
+    });
+    await Model.findByIdAndUpdate(ctx.params.id, {
+      $pull: { labels: ctx.request.body.labels },
+    });
+    ctx.body = { message: "Added labelTypes" };
+    ctx.status = 200;
+  } else {
+    ctx.body = { error: "Forbidden" };
+    ctx.status = 403;
+  }
+  return ctx;
+}
+
 module.exports = {
   getLabelDefinitions,
   getLabelDefinitionById,
@@ -117,4 +177,6 @@ module.exports = {
   updateLabelDefinitionById,
   deleteLabelDefinitions,
   deleteLabelDefinitionById,
+  addLabelTypes,
+  deleteLabelTypes,
 };

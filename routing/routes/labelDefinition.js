@@ -59,5 +59,13 @@ router.del('/:id', async (ctx) => {
 	await controller.deleteLabelDefinitionById(ctx);
 });
 
+router.post("/:id/createlabeltypes", KoaBody(),  async (ctx) => {
+	await controller.addLabelTypes(ctx);
+})
+
+router.post("/:id/deletelabeltypes", KoaBody(), async (ctx) => {
+	await controller.deleteLabelTypes(ctx);
+})
+
 
 module.exports = router;
