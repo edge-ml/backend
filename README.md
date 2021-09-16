@@ -1,9 +1,9 @@
 # Backend
-The backend part of the edge-ml project which can be found [here](https://github.com/edge-ml).
+(https://github.com/edge-ml).
 [![Tests](https://github.com/edge-ml/backend/actions/workflows/tests.yml/badge.svg)](https://github.com/edge-ml/backend/actions/workflows/tests.yml)
 [![Publish Docker image](https://github.com/edge-ml/backend/actions/workflows/publishDocker.yml/badge.svg)](https://github.com/edge-ml/backend/actions/workflows/publishDocker.yml)
 
-A REST API for the <a href="https://github.com/edge-ml/backend">explorer backend</a>.
+A REST API for the <a href="https://github.com/edge-ml/backend">edge-ml backend</a>.
 
 # Getting started
 Before you get started clone *this repository* and the <a href="https://github.com/edge-ml/authentication/">authentication repository</a>
