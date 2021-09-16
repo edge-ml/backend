@@ -14,7 +14,7 @@ You can either run the application within a docker container or directly.
 If you want to run the application locally, please follow the 
 <a href="https://docs.mongodb.com/manual/installation/">mongoDB installation guide</a>.
 
-Please make sure mongoDB and <a href="https://github.com/edge-ml/authentication/">Edge-ml authentication</a>
+Please make sure mongoDB and <a href="https://github.com/edge-ml/authentication/">edge-ml authentication</a>
 is up and running.
 
 Then run the following commands:
