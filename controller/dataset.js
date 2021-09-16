@@ -120,26 +120,26 @@ async function createDataset(ctx) {
   return ctx;
 }
 
-/**
- * update a dataset specified by id
- */
 async function updateDatasetById(ctx) {
   try {
     const dataset = ctx.request.body;
     const project = await ProjectModel.findOne({ _id: ctx.header.project });
+    var timeSeries = undefined;
     if (project.datasets.includes(ctx.params.id)) {
       if (dataset.timeSeries) {
-        await Promise.all(
-          dataset.timeSeries.map((elm) =>
-            TimeSeries.findByIdAndUpdate(elm._id, elm)
-          )
+        timeSeries = await Promise.all(
+          dataset.timeSeries.map((elm) => {
+            if (elm._id) {
+              return TimeSeries.findByIdAndUpdate(elm._id, elm);
+            } else {
+              elm.dataset = ctx.params.id;
+              return TimeSeries.create(elm);
+            }
+          })
         );
-        await Model.findByIdAndUpdate(ctx.params.id, dataset);
-      } else {
-        dataset.timeSeries = undefined;
-        await Model.findByIdAndUpdate(ctx.params.id, dataset);
+        dataset.timeSeries = timeSeries.map(elm => elm._id);
       }
-
+      await Model.findByIdAndUpdate(ctx.params.id, dataset);
       ctx.body = { message: `updated dataset with id: ${ctx.params.id}` };
       ctx.status = 200;
     } else {
@@ -161,7 +161,10 @@ async function deleteDatasetById(ctx) {
     $and: [{ _id: ctx.params.id }, { _id: project.datasets }],
   });
   if (dataset !== null) {
-    await ProjectModel.updateOne({_id: ctx.header.project}, {$pull: {datasets: ctx.params.id}});
+    await ProjectModel.updateOne(
+      { _id: ctx.header.project },
+      { $pull: { datasets: ctx.params.id } }
+    );
 
     await TimeSeries.deleteMany({ _id: { $in: dataset.timeSeries } });
 

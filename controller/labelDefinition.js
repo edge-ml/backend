@@ -1,5 +1,4 @@
 const project = require("../models/project");
-
 const Model = require("../models/labelDefinition").model;
 const LabelModel = require("../models/labelType").model;
 const ProjectModel = require("../models/project").model;
@@ -40,30 +39,53 @@ async function getLabelDefinitionById(ctx) {
  */
 async function createLabelDefinition(ctx) {
   try {
-    const project = await ProjectModel.findOne({ _id: ctx.header.project });
     var document;
     if (
       ctx.request.body.labels &&
       ctx.request.body.labels.every((elm) => typeof elm === "object")
     ) {
-      const labels = await LabelModel.insertMany(ctx.request.body.labels);
-      ctx.request.body.labels = undefined;
-      const labelIds = labels.map((elm) => elm._id);
-      document = new Model({ ...ctx.request.body, labels: labelIds });
-      await ProjectModel.findByIdAndUpdate(ctx.header.project, {
-        $push: { labelTypes: labelIds },
-      });
+      const Labeling = await Model.findOne({
+        name: ctx.request.body.name,
+      }).populate("labels");
+      if (Labeling) {
+        const compareLabels = Labeling.labels.map(elm => elm.name);
+        const newLabels = ctx.request.body.labels.filter(
+          (elm) => !compareLabels.includes(elm.name)
+        );
+        const labels = await LabelModel.insertMany(newLabels);
+        const labelIds = labels.map((elm) => elm._id);
+        await Model.updateOne(
+          { _id: Labeling._id },
+          { $push: { labels: labelIds } }
+        );
+        await ProjectModel.findByIdAndUpdate(ctx.header.project, {
+          $push: { labelTypes: labelIds },
+        });
+      } else {
+        const labels = await LabelModel.insertMany(ctx.request.body.labels);
+        ctx.request.body.labels = undefined;
+        const labelIds = labels.map((elm) => elm._id);
+        document = new Model({ ...ctx.request.body, labels: labelIds });
+        await ProjectModel.findByIdAndUpdate(ctx.header.project, {
+          $push: { labelTypes: labelIds },
+        });
+        await document.save();
+        await ProjectModel.findByIdAndUpdate(ctx.header.project, {
+          $push: { labelDefinitions: document._id },
+        });
+      }
     } else {
       document = new Model(ctx.request.body);
+      await ProjectModel.findByIdAndUpdate(ctx.header.project, {
+        $push: { labelDefinitions: document._id },
+      });
     }
-    await document.save();
-    await ProjectModel.findByIdAndUpdate(ctx.header.project, {
-      $push: { labelDefinitions: document._id },
-    });
+
     ctx.body = document;
     ctx.status = 201;
     return ctx;
   } catch (e) {
+    console.log(e);
     ctx.body = { error: e };
     ctx.status = 500;
     return ctx;
