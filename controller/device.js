@@ -1,13 +1,14 @@
 const Model = require("../models/device").model;
 const Project = require("../models/project").model;
 const Datasets = require("../models/dataset").model;
+const Sensor = require("../models/sensor").model;
+const SensorParseScheme = require("../models/sensorParseScheme").model;
 
 /**
  * get all devices
  */
 async function getDevices(ctx) {
-  const project = await Project.findById({ _id: ctx.header.project });
-  const devices = await Model.find({ _id: project.devices });
+ const devices = await Model.find({});
   ctx.body = devices;
   ctx.status = 200;
   return ctx;
@@ -17,21 +18,17 @@ async function getDevices(ctx) {
  * get device by id
  */
 async function getDeviceById(ctx) {
-  const project = await Project.findById({ _id: ctx.header.project });
-  const data = await Model.findOne({
-    $and: [
-      { _id: ctx.params.id },
-      {
-        _id: project.devices,
-      },
-    ],
-  });
-  if (data !== null) {
-    ctx.body = data;
+
+  const deviceData = await Model.findOne({ _id: ctx.params.id });
+  const sensors = await Sensor.find({device: ctx.params.id });
+  const parseScheme = await SensorParseScheme.find({});
+  console.log(sensors)
+  if (deviceData !== null) {
+    ctx.body = {device: deviceData, sensors: sensors, scheme: parseScheme};
     ctx.status = 200;
   } else {
-    ctx.body = { error: "Forbidden" };
-    ctx.status = 403;
+    ctx.body = { error: "Not found" };
+    ctx.status = 404;
   }
   return ctx;
 }
@@ -42,10 +39,6 @@ async function getDeviceById(ctx) {
 async function createDevice(ctx) {
   const document = new Model(ctx.request.body);
   await document.save();
-  await Project.findByIdAndUpdate(ctx.header.project, {
-    $push: { devices: document._id },
-  });
-
   ctx.body = document;
   ctx.status = 201;
   return ctx;
@@ -55,23 +48,16 @@ async function createDevice(ctx) {
  * update a device specified by id
  */
 async function updateDeviceById(ctx) {
-  const project = await Project.findById({ _id: ctx.header.project });
-  if (project.devices.includes(ctx.params.id)) {
-    await Model.findByIdAndUpdate(ctx.params.id, { $set: ctx.request.body });
-    ctx.body = { message: `updated device with id: ${ctx.params.id}` };
-    ctx.status = 200;
-  } else {
-    ctx.body = { error: "Forbidden" };
-    ctx.status = 403;
-  }
-  return ctx;
+  await Model.findByIdAndUpdate(ctx.params.id, { $set: ctx.request.body });
+  ctx.body = { message: `updated device with id: ${ctx.params.id}` };
+  ctx.status = 200;
 }
 
 /**
  * delete all devices
  */
 async function deleteDevices(ctx) {
-  const project = await Project.findById({ _id: ctx.header.project });
+  /*const project = await Project.findById({ _id: ctx.header.project });
   await Datasets.updateMany(
     { device: project.datasets },
     { $pull: { devices: project.devices } }
@@ -83,14 +69,14 @@ async function deleteDevices(ctx) {
   );
   ctx.body = { message: "deleted all devices" };
   ctx.status = 200;
-  return ctx;
+  return ctx;*/
 }
 
 /**
  * delete a device specified by id
  */
 async function deleteDeviceById(ctx) {
-  const project = await Project.findById({ _id: ctx.header.project });
+  /*const project = await Project.findById({ _id: ctx.header.project });
   await Datasets.updateMany(
     { device: project.datasets },
     { $pull: { devices: ctx.params.id } }
@@ -102,7 +88,10 @@ async function deleteDeviceById(ctx) {
   await Model.findOneAndDelete({ _id: ctx.params.id });
   ctx.body = { message: `deleted device with id: ${ctx.params.id}` };
   ctx.status = 200;
-  return ctx;
+  return ctx;*/
+
+  
+
 }
 
 module.exports = {

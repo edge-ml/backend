@@ -11,6 +11,8 @@ const authenticate = require("./authentication/authenticate");
 const authorize = require("./authorization/authorization");
 const authorizeProjects = require("./authorization/authorization_project");
 const dbSchema = require("koa-mongoose-erd-generator");
+const populateDatabase_Nicla =
+  require("./createDevices").populateDatabase_Nicla;
 
 // create server
 const server = new Koa();
@@ -22,9 +24,17 @@ mongoose.connect(config.db, { useNewUrlParser: true });
 mongoose.set("useFindAndModify", false);
 mongoose.set("useCreateIndex", true);
 
+populateDatabase_Nicla()
+  .then(() => {
+    console.log("Added Nicla");
+  })
+  .catch((err) => {
+    console.log(err);
+    process.exit();
+  });
+
 // setup koa middlewares
 server.use(cors());
-
 
 // Serve documentation
 server.use(
@@ -34,7 +44,6 @@ server.use(
     __dirname + "/docs/dbSchema.html"
   )
 );
-
 
 const spec = yamljs.load("./docs/docs.yaml");
 server.use(
@@ -59,7 +68,6 @@ server.use((ctx, next) => {
   }
   return next();
 });
-
 
 // check authentication
 server.use(async (ctx, next) => {
