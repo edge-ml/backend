@@ -22,7 +22,6 @@ async function getDeviceById(ctx) {
   const deviceData = await Model.findOne({ _id: ctx.params.id });
   const sensors = await Sensor.find({device: ctx.params.id });
   const parseScheme = await SensorParseScheme.find({});
-  console.log(sensors)
   if (deviceData !== null) {
     ctx.body = {device: deviceData, sensors: sensors, scheme: parseScheme};
     ctx.status = 200;

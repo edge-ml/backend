@@ -46,18 +46,18 @@ router.put('/:id', KoaBody(), async (ctx) => {
  * route:					/devices
  * method type: 	DELETE
  */
-router.del('/', async (ctx) => {
+/*router.del('/', async (ctx) => {
 	await controller.deleteDevices(ctx);
-});
+});*/
 
 /**
  * delete a specific device
  * route:					/devices/:id
  * method type: 	DELETE
  */
-router.del('/:id', async (ctx) => {
+/*router.del('/:id', async (ctx) => {
 	await controller.deleteDeviceById(ctx);
-});
+});*/
 
 
 module.exports = router;
