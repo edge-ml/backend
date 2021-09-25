@@ -41,4 +41,8 @@ router.post("/addDatasetIncrementIot", KoaBody(), async (ctx) => {
   await controller.addDatasetIncrementIot(ctx);
 });
 
+router.get("/project", async (ctx) => {
+  await controller.getProjet(ctx);
+});
+
 module.exports = router;
