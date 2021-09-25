@@ -235,6 +235,17 @@ describe("Testing API Routes", () => {
         });
     });
 
+    it("Get project with key", (done) => {
+      request
+        .post("/api/deviceApi/getProject")
+        .send({ key: deviceApiKey })
+        .expect(200)
+        .end(async (err, res) => {
+          // TODO: add sensible test assertions
+          done(err)
+        });
+    });
+
     var datasetKey = undefined;
     it("Generate datasetCollector", (done) => {
       request
@@ -297,6 +308,8 @@ describe("Testing API Routes", () => {
       dataset.timeSeries = [];
       dataset.save();
     });
+
+    
 
     it("Delete the key", (done) => {
       request

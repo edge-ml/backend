@@ -379,31 +379,31 @@ async function uploadDataset(ctx) {
   }
 }
 
-async function getProjet(ctx) {
+async function getProject(ctx) {
   try {
-    const body = ctx.request.body.payload;
     const key = ctx.request.body.key;
-
     const deviceApi = await DeviceApi.findOne({
       deviceApiKey: key,
     });
 
     if (!deviceApi) {
-      ctx.body = { error: "Invalid key" };
+      ctx.body = { error: "Invalid key." };
       ctx.status = 403;
       return ctx;
     }
     
     const project = await Project.findOne(deviceApi.projectId);
     if (!project.enableDeviceApi) {
-      ctx.body = { error: "Can not ge project because API is not enabled." };
+      ctx.body = { error: "Can not get project because API is not enabled." };
       ctx.status = 403;
       return ctx;
     }
 
-    ctx.body = project;
-    ctx.status = 200;
-    return ctx;
+    // TODO: get projects recursivley
+
+    ctx.status = 200
+    return ctx
+    
   } catch (e) {
     ctx.status = 400;
     ctx.body = { error: "Failed to retrieve project." };
@@ -421,4 +421,5 @@ module.exports = {
   addDatasetIncrement,
   addDatasetIncrementBatch,
   addDatasetIncrementIot,
+  getProject,
 };
