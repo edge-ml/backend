@@ -25,7 +25,7 @@ npm run start
 ```
 
 # Testing
-After developing and **before** committing, please make sure all test are passing. MongoDB and Aura Authentication
+After developing and **before** committing, please make sure all test are passing. MongoDB and edge-ml Authentication
 need to be up and running.
 
 ```
