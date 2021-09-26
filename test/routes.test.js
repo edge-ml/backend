@@ -241,7 +241,17 @@ describe("Testing API Routes", () => {
         .send({ key: deviceApiKey })
         .expect(200)
         .end(async (err, res) => {
-          // TODO: add sensible test assertions
+          expect(res.body).to.have.all.keys("datasets")
+          done(err)
+        });
+    });
+
+    it("Get project with invalid key", (done) => {
+      request
+        .post("/api/deviceApi/getProject")
+        .send({ key: "nonsense" })
+        .expect(403)
+        .end(async (err, res) => {
           done(err)
         });
     });

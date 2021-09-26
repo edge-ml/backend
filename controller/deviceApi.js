@@ -399,7 +399,11 @@ async function getProject(ctx) {
       return ctx;
     }
 
-    // TODO: get projects recursivley
+    const datasets = await Dataset.find({ _id: project.datasets });
+
+    ctx.body = {
+      datasets: datasets
+    }
 
     ctx.status = 200
     return ctx
