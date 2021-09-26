@@ -404,7 +404,7 @@ async function getProject(ctx) {
     ctx.body = {
       datasets: datasets.map(x => { 
         return { 
-          samples: x.timeSeries.map(y => { 
+          sensors: x.timeSeries.map(y => { 
             return {
               name: y.name,
               data: y.data.map(z => { return { time: z.timestamp, value: z.datapoint }})
