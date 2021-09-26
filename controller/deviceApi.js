@@ -399,10 +399,28 @@ async function getProject(ctx) {
       return ctx;
     }
 
-    const datasets = await Dataset.find({ _id: project.datasets });
+    const datasets = await Dataset.find({ _id: project.datasets }).populate("timeSeries");
 
     ctx.body = {
-      datasets: datasets
+      datasets: datasets.map(x => { 
+        return { 
+          samples: x.timeSeries.map(y => { 
+            return {
+              name: y.name,
+              data: y.data.map(z => { return { time: z.timestamp, value: z.datapoint }})
+            }
+          }),
+          labels: x.labelings.map(a => {
+            return a.labels.map(b => { 
+              return {
+                name: b.name,
+                start: b.start,
+                end: b.end
+              }
+            })
+          })
+        }
+      })
     }
 
     ctx.status = 200
