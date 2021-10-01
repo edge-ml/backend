@@ -2,6 +2,7 @@ const project = require("../models/project");
 const Model = require("../models/labelDefinition").model;
 const LabelModel = require("../models/labelType").model;
 const ProjectModel = require("../models/project").model;
+const DatasetModel = require("../models/dataset").model;
 
 /**
  * get all labelDefinitions
@@ -48,7 +49,7 @@ async function createLabelDefinition(ctx) {
         name: ctx.request.body.name,
       }).populate("labels");
       if (Labeling) {
-        const compareLabels = Labeling.labels.map(elm => elm.name);
+        const compareLabels = Labeling.labels.map((elm) => elm.name);
         const newLabels = ctx.request.body.labels.filter(
           (elm) => !compareLabels.includes(elm.name)
         );
@@ -122,33 +123,48 @@ async function deleteLabelDefinitions(ctx) {
  * delete a labelDefinition specified by id
  */
 async function deleteLabelDefinitionById(ctx) {
-  const project = await ProjectModel.findOne({ _id: ctx.header.project });
-  if (project.labelDefinitions.includes(ctx.params.id)) {
-    const labelDefinition = await Model.findOne({ _id: ctx.params.id });
-    // delete labelTypes first
-    labelDefinition.labels.forEach(async (label) => {
-      await LabelModel.findOneAndDelete({ _id: label._id });
-    });
-    const newProjectLabelTypes = project.labelTypes.filter(
-      (item) => !labelDefinition.labels.includes(item)
-    );
-    const labelDefinitions = project.labelDefinitions.filter(
-      (item) => String(item) !== String(ctx.params.id)
-    );
-    // delete labelDefinition
-    await Model.findOneAndDelete({ _id: ctx.params.id });
-    await ProjectModel.findByIdAndUpdate(ctx.header.project, {
-      $set: {
-        labelTypes: newProjectLabelTypes,
-        labelDefinitions: labelDefinitions,
-      },
-    });
-    ctx.body = { message: `deleted labelDefinition with id: ${ctx.params.id}` };
-    ctx.status = 200;
-  } else {
-    ctx.body = { error: "Forbidden" };
-    ctx.status = 403;
+  try {
+    const project = await ProjectModel.findOne({ _id: ctx.header.project });
+    if (project.labelDefinitions.includes(ctx.params.id)) {
+      const labelDefinition = await Model.findOne({ _id: ctx.params.id });
+      const result = await DatasetModel.updateMany(
+        { _id: project.datasets },
+        {
+          $pull: { labelings: { labelingId: ctx.params.id } },
+        }
+      );
 
+      // delete labelTypes first
+      labelDefinition.labels.forEach(async (label) => {
+        await LabelModel.findOneAndDelete({ _id: label._id });
+      });
+      const newProjectLabelTypes = project.labelTypes.filter(
+        (item) => !labelDefinition.labels.includes(item)
+      );
+      const labelDefinitions = project.labelDefinitions.filter(
+        (item) => String(item) !== String(ctx.params.id)
+      );
+      // delete labelDefinition
+      await Model.findOneAndDelete({ _id: ctx.params.id });
+      await ProjectModel.findByIdAndUpdate(ctx.header.project, {
+        $set: {
+          labelTypes: newProjectLabelTypes,
+          labelDefinitions: labelDefinitions,
+        },
+      });
+      ctx.body = {
+        message: `deleted labelDefinition with id: ${ctx.params.id}`,
+      };
+      ctx.status = 200;
+    } else {
+      ctx.body = { error: "Forbidden" };
+      ctx.status = 403;
+
+      return ctx;
+    }
+  } catch (e) {
+    ctx.status = 500;
+    ctx.body = { error: "Internal server error" };
     return ctx;
   }
 }
@@ -174,22 +190,36 @@ async function addLabelTypes(ctx) {
 }
 
 async function deleteLabelTypes(ctx) {
-  const project = await ProjectModel.findOne({ _id: ctx.header.project });
-  if (project.labelDefinitions.includes(ctx.params.id)) {
-    const labelTypes = await LabelModel.deleteMany({ _id: ctx.request.body });
-    await ProjectModel.findByIdAndUpdate(ctx.header.project, {
-      $pull: { labelTypes: ctx.request.body.labels },
-    });
-    await Model.findByIdAndUpdate(ctx.params.id, {
-      $pull: { labels: ctx.request.body.labels },
-    });
-    ctx.body = { message: "Added labelTypes" };
-    ctx.status = 200;
-  } else {
-    ctx.body = { error: "Forbidden" };
-    ctx.status = 403;
+  try {
+    const project = await ProjectModel.findOne({ _id: ctx.header.project });
+    if (project.labelDefinitions.includes(ctx.params.id)) {
+      const result = await DatasetModel.updateMany(
+        { _id: project.datasets },
+        {
+          $pull: {
+            "labelings.$[].labels": { type: { $in: ctx.request.body } },
+          },
+        }
+      );
+      const labelTypes = await LabelModel.deleteMany({ _id: ctx.request.body });
+      await ProjectModel.findByIdAndUpdate(ctx.header.project, {
+        $pull: { labelTypes: { $in: ctx.request.body } },
+      });
+      await Model.findByIdAndUpdate(ctx.params.id, {
+        $pull: { labels: { $in: ctx.request.body } },
+      });
+      ctx.body = { message: "Added labelTypes" };
+      ctx.status = 200;
+    } else {
+      ctx.body = { error: "Forbidden" };
+      ctx.status = 403;
+    }
+    return ctx;
+  } catch (e) {
+    ctx.status = 500;
+    ctx.body = { error: "Internal server error" };
+    return ctx;
   }
-  return ctx;
 }
 
 module.exports = {

@@ -1,9 +1,13 @@
 const mongoose = require("mongoose");
 
+const subDocumentValidator = () => {
+	console.log(this);
+}
+
 const LabelDefinition = new mongoose.Schema({
 	labels: {
 		type: [mongoose.Schema.Types.ObjectId],
-		ref: "LabelType",
+		ref: "LabelType"
 	},
 	name: {
 		type: String,
