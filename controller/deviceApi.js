@@ -3,6 +3,7 @@ const crypto = require("crypto");
 const Dataset = require("../models/dataset").model;
 const DeviceApi = require("../models/deviceApi").model;
 const TimeSeries = require("../models/timeSeries").model;
+const Labeling = require("../models/labelDefinition").model;
 
 async function switchActive(ctx) {
   const { authId } = ctx.state;
@@ -391,7 +392,7 @@ async function getProject(ctx) {
       ctx.status = 403;
       return ctx;
     }
-    
+
     const project = await Project.findOne(deviceApi.projectId);
     if (!project.enableDeviceApi) {
       ctx.body = { error: "Can not get project because API is not enabled." };
@@ -399,34 +400,45 @@ async function getProject(ctx) {
       return ctx;
     }
 
-    const datasets = await Dataset.find({ _id: project.datasets }).populate("timeSeries");
+    const datasets = await Dataset.find({ _id: project.datasets }).populate(
+      "timeSeries"
+    );
 
     ctx.body = {
-      datasets: datasets.map(x => { 
-        return { 
-          sensors: x.timeSeries.map(y => { 
-            return {
-              name: y.name,
-              data: y.data.map(z => { return { time: z.timestamp, value: z.datapoint }})
-            }
-          }),
-          labels: x.labelings.map(a => {
-            return a.labels.map(b => { 
-              return {
-                name: b.name,
-                start: b.start,
-                end: b.end
-              }
+      datasets: await Promise.all(
+        datasets.map(async (x) => {
+          const tmpLabels = await Promise.all(
+            x.labelings.map(async (a) => {
+              const labeling = await Labeling.findOne({ _id: a.labelingId });
+              return a.labels.map((b) => {
+                return {
+                  labelingName: labeling.name,
+                  name: b.name,
+                  start: b.start,
+                  end: b.end,
+                };
+              });
             })
-          })
-        }
-      })
-    }
+          );
+          return {
+            sensors: x.timeSeries.map((y) => {
+              return {
+                name: y.name,
+                data: y.data.map((z) => {
+                  return { timestamp: z.timestamp, datapoint: z.datapoint };
+                }),
+              };
+            }),
+            labels: tmpLabels,
+          };
+        })
+      ),
+    };
 
-    ctx.status = 200
-    return ctx
-    
+    ctx.status = 200;
+    return ctx;
   } catch (e) {
+    console.log(e);
     ctx.status = 400;
     ctx.body = { error: "Failed to retrieve project." };
     return ctx;
