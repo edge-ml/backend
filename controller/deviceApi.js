@@ -3,6 +3,7 @@ const crypto = require("crypto");
 const Dataset = require("../models/dataset").model;
 const DeviceApi = require("../models/deviceApi").model;
 const TimeSeries = require("../models/timeSeries").model;
+const Labeling = require("../models/labelDefinition").model;
 
 async function switchActive(ctx) {
   const { authId } = ctx.state;
@@ -379,6 +380,71 @@ async function uploadDataset(ctx) {
   }
 }
 
+async function getProject(ctx) {
+  try {
+    const key = ctx.request.body.key;
+    const deviceApi = await DeviceApi.findOne({
+      deviceApiKey: key,
+    });
+
+    if (!deviceApi) {
+      ctx.body = { error: "Invalid key." };
+      ctx.status = 403;
+      return ctx;
+    }
+
+    const project = await Project.findOne(deviceApi.projectId);
+    if (!project.enableDeviceApi) {
+      ctx.body = { error: "Can not get project because API is not enabled." };
+      ctx.status = 403;
+      return ctx;
+    }
+
+    const datasets = await Dataset.find({ _id: project.datasets }).populate(
+      "timeSeries"
+    );
+
+    ctx.body = {
+      datasets: await Promise.all(
+        datasets.map(async (x) => {
+          const tmpLabels = await Promise.all(
+            x.labelings.map(async (a) => {
+              const labeling = await Labeling.findOne({ _id: a.labelingId });
+              return a.labels.map((b) => {
+                return {
+                  labelingName: labeling.name,
+                  name: b.name,
+                  start: b.start,
+                  end: b.end,
+                };
+              });
+            })
+          );
+          return {
+            sensors: x.timeSeries.map((y) => {
+              return {
+                name: y.name,
+                data: y.data.map((z) => {
+                  return { timestamp: z.timestamp, datapoint: z.datapoint };
+                }),
+              };
+            }),
+            labels: tmpLabels,
+          };
+        })
+      ),
+    };
+
+    ctx.status = 200;
+    return ctx;
+  } catch (e) {
+    console.log(e);
+    ctx.status = 400;
+    ctx.body = { error: "Failed to retrieve project." };
+    return ctx;
+  }
+}
+
 module.exports = {
   setApiKey,
   removeKey,
@@ -389,4 +455,5 @@ module.exports = {
   addDatasetIncrement,
   addDatasetIncrementBatch,
   addDatasetIncrementIot,
+  getProject,
 };
