@@ -97,16 +97,31 @@ async function createLabelDefinition(ctx) {
  * update a labelDefinition specified by id
  */
 async function updateLabelDefinitionById(ctx) {
-  const project = await ProjectModel.findOne({ _id: ctx.header.project });
-  if (project.labelDefinitions.includes(ctx.params.id)) {
-    await Model.findByIdAndUpdate(ctx.params.id, { $set: ctx.request.body });
-    ctx.body = { message: `updated labelDefinition with id: ${ctx.params.id}` };
-    ctx.status = 200;
-  } else {
-    ctx.body = { error: "Forbidden" };
-    ctx.status = 403;
+  try {
+    const { labeling, labels } = ctx.request.body;
+    const project = await ProjectModel.findOne({ _id: ctx.header.project });
+    if (project.labelDefinitions.includes(ctx.params.id)) {
+      await Model.findByIdAndUpdate(ctx.params.id, { $set: labeling });
+
+      await Promise.all(
+        labels.map((elm) => LabelModel.findOneAndUpdate({ _id: elm._id }, elm))
+      );
+
+      ctx.body = {
+        message: `updated labelDefinition with id: ${ctx.params.id}`,
+      };
+      ctx.status = 200;
+    } else {
+      ctx.body = { error: "Forbidden" };
+      ctx.status = 403;
+    }
+    return ctx;
+  } catch (e) {
+    console.log(e);
+    ctx.body = { error: "Internal server error" };
+    ctx.status = 500;
+    return ctx;
   }
-  return ctx;
 }
 
 /**

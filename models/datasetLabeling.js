@@ -15,10 +15,6 @@ const DatasetLabeling = new mongoose.Schema({
 	creator: {
 		type: mongoose.Schema.Types.ObjectId,
 		ref: 'Service'
-	},
-	labelingName: {
-		type: mongoose.Schema.Types.String,
-		ref: 'LabelingName'
 	}
 });
 
