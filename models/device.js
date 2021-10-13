@@ -14,6 +14,11 @@ const Device = new mongoose.Schema({
 		type: String,
 		required: true,
 		unique: true
+	},
+	sensors: {
+		type: mongoose.Schema.Types.ObjectId,
+		required: true,
+		default: []
 	}
 });
 
