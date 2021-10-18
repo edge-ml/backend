@@ -221,10 +221,12 @@ const tmpSensorTypeMap = Object.keys(sensorTypeMap).map((key, index) => {
 
 tmpSensorTypeMap.map((sensor) => {
   const foundSchema = parseSchema.types.find((elm) => elm.id === sensor.type);
-  sensor.parseScheme = foundSchema["parse-scheme"];
+  sensor.parseScheme = foundSchema["parse-scheme"].map((elm) => {
+    return { ...elm, scaleFactor: elm["scale-factor"] };
+  });
   sensor.typeName = foundSchema.type;
-  delete sensor["type-name"]
-  delete sensor["type"]
+  delete sensor["type-name"];
+  delete sensor["type"];
   return sensor;
 });
 
@@ -242,9 +244,13 @@ module.exports.populateDatabase_Nicla = async () => {
     .then((deviceDoc) => {
       return Promise.all(
         tmpSensorTypeMap.map((elm) =>
-          SensorModel.findOneAndUpdate({name: elm.name, device: deviceDoc._id}, {...elm, device: deviceDoc._id}, {
-            upsert: true,
-          })
+          SensorModel.findOneAndUpdate(
+            { name: elm.name, device: deviceDoc._id },
+            { ...elm, device: deviceDoc._id },
+            {
+              upsert: true,
+            }
+          )
         )
       );
     });
