@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const DeviceModel = require("./models/device").model;
 const SensorModel = require("./models/sensor").model;
 const SensorParseSchemaModel = require("./models/sensorParseScheme").model;
+const util = require("util");
 
 const sensorTypeMap = {
   1: {
@@ -210,10 +211,28 @@ const parseSchema = {
   ],
 };
 
+const tmpSensorTypeMap = Object.keys(sensorTypeMap).map((key, index) => {
+  return {
+    ...sensorTypeMap[key],
+    bleKey: key,
+    typeName: sensorTypeMap[key]["type-name"],
+  };
+});
+
+tmpSensorTypeMap.map((sensor) => {
+  const foundSchema = parseSchema.types.find((elm) => elm.id === sensor.type);
+  sensor.parseScheme = foundSchema["parse-scheme"].map((elm) => {
+    return { ...elm, scaleFactor: elm["scale-factor"] };
+  });
+  sensor.typeName = foundSchema.type;
+  delete sensor["type-name"];
+  delete sensor["type"];
+  return sensor;
+});
 
 const niclaDevice = { name: "Nicla", generation: "1" };
 
-module.exports.populateDatabase_Nicla = () => {
+module.exports.populateDatabase_Nicla = async () => {
   return mongoose
     .connect(config.db, { useNewUrlParser: true })
     .then(() => {
@@ -222,47 +241,17 @@ module.exports.populateDatabase_Nicla = () => {
         new: true,
       });
     })
-    .then((device) => {
-      const newSensorList = Object.keys(sensorTypeMap).map((key, index) => {
-        const sensor = sensorTypeMap[key];
-        return {
-          bleKey: key,
-          name: sensor.name,
-          type: sensor.type,
-          device: device._id,
-        };
-      });
+    .then((deviceDoc) => {
       return Promise.all(
-        newSensorList.map((elm) =>
-          SensorModel.findOneAndUpdate(elm, elm, {
-            upsert: true,
-            new: true,
-          })
+        tmpSensorTypeMap.map((elm) =>
+          SensorModel.findOneAndUpdate(
+            { name: elm.name, device: deviceDoc._id },
+            { ...elm, device: deviceDoc._id },
+            {
+              upsert: true,
+            }
+          )
         )
       );
-    })
-    .then(() => {
-      const newParseSchemeData = parseSchema.types.map((elm, index) => {
-        const parseSchema = elm["parse-scheme"];
-        return {
-          id: elm.id,
-          type: elm.type,
-          parseScheme: parseSchema.map((parseElm, index) => {
-            return {
-              type: parseElm.type,
-              name: parseElm.name,
-              scaleFactor: parseElm["scale-factor"],
-            };
-          }),
-        };
-      });
-      return Promise.all(
-        newParseSchemeData.map((elm) =>
-          SensorParseSchemaModel.findOneAndUpdate({id: elm.id}, elm, {
-            upsert: true,
-            new: true,
-          })
-        )
-      );
-    })
+    });
 };

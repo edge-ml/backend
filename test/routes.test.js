@@ -29,7 +29,8 @@ const device = {
   sensors: [],
   generation: 1,
   user: "",
-  name: "deviceTestName"
+  name: "deviceTestName",
+  sensors: []
 };
 const firmware = {
   version: "1.0",
@@ -537,8 +538,7 @@ describe("Testing API Routes", () => {
         .end((err, res) => {
           expect(res.body).to.have.all.keys(
             "device",
-            "scheme",
-            "sensors",
+            "sensors"
           );
           done(err);
         });

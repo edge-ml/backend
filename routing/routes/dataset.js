@@ -8,12 +8,14 @@ const router = new Router();
 const subroutes = {
 	result: require('./subroutes/result'),
 	labeling: require('./subroutes/labeling'),
-	video: require('./subroutes/video')
+	video: require('./subroutes/video'),
+	timeSeries: require('./subroutes/timeseries')
 };
 
 router.use('/:datasetId/results', subroutes.result.routes(), subroutes.result.allowedMethods());
 router.use('/:datasetId/labelings', subroutes.labeling.routes(), subroutes.labeling.allowedMethods());
 router.use('/:datasetId/video', subroutes.video.routes(), subroutes.video.allowedMethods());
+router.use('/:datasetId/timeseries', subroutes.timeSeries.routes(), subroutes.timeSeries.allowedMethods());
 
 /**
  * get all datasets for current user

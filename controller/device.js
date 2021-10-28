@@ -8,7 +8,7 @@ const SensorParseScheme = require("../models/sensorParseScheme").model;
  * get all devices
  */
 async function getDevices(ctx) {
- const devices = await Model.find({});
+  const devices = await Model.find({});
   ctx.body = devices;
   ctx.status = 200;
   return ctx;
@@ -18,12 +18,10 @@ async function getDevices(ctx) {
  * get device by id
  */
 async function getDeviceById(ctx) {
-
   const deviceData = await Model.findOne({ _id: ctx.params.id });
-  const sensors = await Sensor.find({device: ctx.params.id });
-  const parseScheme = await SensorParseScheme.find({});
+  const sensors = await Sensor.find({ device: ctx.params.id });
   if (deviceData !== null) {
-    ctx.body = {device: deviceData, sensors: sensors, scheme: parseScheme};
+    ctx.body = { device: deviceData, sensors: sensors};
     ctx.status = 200;
   } else {
     ctx.body = { error: "Not found" };
@@ -88,9 +86,6 @@ async function deleteDeviceById(ctx) {
   ctx.body = { message: `deleted device with id: ${ctx.params.id}` };
   ctx.status = 200;
   return ctx;*/
-
-  
-
 }
 
 module.exports = {
