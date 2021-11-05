@@ -11,8 +11,9 @@ const authenticate = require("./authentication/authenticate");
 const authorize = require("./authorization/authorization");
 const authorizeProjects = require("./authorization/authorization_project");
 const dbSchema = require("koa-mongoose-erd-generator");
-const populateDatabase_Nicla =
-  require("./createDevices").populateDatabase_Nicla;
+const populateDatabase = require("./createDevices");
+const niclaDevice = require("./deviceSchemas/nicla").device;
+const bleNanoDeivce = require("./deviceSchemas/bleNano").device;
 
 // create server
 const server = new Koa();
@@ -24,9 +25,12 @@ mongoose.connect(config.db, { useNewUrlParser: true });
 mongoose.set("useFindAndModify", false);
 mongoose.set("useCreateIndex", true);
 
-populateDatabase_Nicla()
+Promise.all(
+  [populateDatabase.addDevice(niclaDevice)],
+  populateDatabase.addDevice(bleNanoDeivce)
+)
   .then(() => {
-    console.log("Added Nicla");
+    console.log("Added devices");
   })
   .catch((err) => {
     console.log(err);
