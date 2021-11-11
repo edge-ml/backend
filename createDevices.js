@@ -4,8 +4,6 @@ const DeviceModel = require("./models/device").model;
 const SensorModel = require("./models/sensor").model;
 const util = require("util");
 
-
-
 const preprocessDevice = (device) => {
   const sensorTypeMap = device.sensorTypeMap;
   const parseSchema = device.parseSchema;
@@ -18,7 +16,7 @@ const preprocessDevice = (device) => {
       typeName: sensorTypeMap[key]["type-name"],
     };
   });
-  
+
   tmpSensorTypeMap.map((sensor) => {
     const foundSchema = parseSchema.types.find((elm) => elm.id === sensor.type);
     sensor.parseScheme = foundSchema["parse-scheme"].map((elm) => {
@@ -29,14 +27,14 @@ const preprocessDevice = (device) => {
     delete sensor["type"];
     return sensor;
   });
-  return [deviceInfo, tmpSensorTypeMap]
-}
+  return [deviceInfo, tmpSensorTypeMap];
+};
 
 const addDeviceToDataBase = async (device, sensorMap) => {
   return mongoose
     .connect(config.db, { useNewUrlParser: true })
     .then(() => {
-      return DeviceModel.findOneAndUpdate(device, device, {
+      return DeviceModel.findOneAndUpdate({ name: device.name }, device, {
         upsert: true,
         new: true,
       });
@@ -56,7 +54,7 @@ const addDeviceToDataBase = async (device, sensorMap) => {
     });
 };
 
-module.exports.addDevice = (device) =>  {
+module.exports.addDevice = (device) => {
   const [deviceInfo, sensorMap] = preprocessDevice(device);
   return addDeviceToDataBase(deviceInfo, sensorMap);
-}
+};

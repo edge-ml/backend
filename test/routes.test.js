@@ -27,11 +27,12 @@ let experiment;
 
 const device = {
   sensors: [],
-  generation: 1,
+  generation: "1.0.0",
   user: "",
   name: "deviceTestName",
   sensors: []
 };
+
 const firmware = {
   version: "1.0",
   binary: "somebufferedstring",
@@ -530,9 +531,9 @@ describe("Testing API Routes", () => {
         });
     });
 
-    it("Returns a device by id", (done) => {
+    it("Returns a device by name and generation", (done) => {
       request
-        .get(`/api/devices/${device._id}`)
+        .get(`/api/devices/${device.name}/${device.generation}`)
         .set({ Authorization: token, project: project._id })
         .expect(200)
         .end((err, res) => {

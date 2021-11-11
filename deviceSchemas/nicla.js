@@ -207,5 +207,5 @@ exports.device = {
       },
     ],
   },
-  deviceInfo: { name: "Nicla", generation: "1" },
+  deviceInfo: { name: "NICLA", generation: "1.0.0" },
 };
