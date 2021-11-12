@@ -11,7 +11,7 @@ const authenticate = require("./authentication/authenticate");
 const authorize = require("./authorization/authorization");
 const authorizeProjects = require("./authorization/authorization_project");
 const dbSchema = require("koa-mongoose-erd-generator");
-const populateDatabase = require("./createDevices");
+const deviceManager = require("./createDevices");
 const niclaDevice = require("./deviceSchemas/nicla").device;
 const bleNanoDeivce = require("./deviceSchemas/bleNano").device;
 
@@ -25,12 +25,15 @@ mongoose.connect(config.db, { useNewUrlParser: true });
 mongoose.set("useFindAndModify", false);
 mongoose.set("useCreateIndex", true);
 
-Promise.all(
-  [populateDatabase.addDevice(niclaDevice)],
-  populateDatabase.addDevice(bleNanoDeivce)
-)
+deviceManager
+  .clearDevices()
   .then(() => {
-    console.log("Added devices");
+    Promise.all(
+      [deviceManager.addDevice(niclaDevice)],
+      deviceManager.addDevice(bleNanoDeivce)
+    ).then(() => {
+      console.log("Added devices");
+    });
   })
   .catch((err) => {
     console.log(err);

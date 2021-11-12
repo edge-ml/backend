@@ -19,8 +19,8 @@ router.get('/', async (ctx) => {
  * route:					/devices/:id
  * method type: 	GET
  */
-router.get('/:id', async (ctx) => {
-	await controller.getDeviceById(ctx);
+router.get('/:name/:generation', async (ctx) => {
+	await controller.getDeviceByNameAndGeneration(ctx);
 });
 
 /**
@@ -41,23 +41,7 @@ router.put('/:id', KoaBody(), async (ctx) => {
 	await controller.updateDeviceById(ctx);
 });
 
-/**
- * delete all devices
- * route:					/devices
- * method type: 	DELETE
- */
-/*router.del('/', async (ctx) => {
-	await controller.deleteDevices(ctx);
-});*/
 
-/**
- * delete a specific device
- * route:					/devices/:id
- * method type: 	DELETE
- */
-/*router.del('/:id', async (ctx) => {
-	await controller.deleteDeviceById(ctx);
-});*/
 
 
 module.exports = router;

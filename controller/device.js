@@ -14,20 +14,18 @@ async function getDevices(ctx) {
   return ctx;
 }
 
-/**
- * get device by id
- */
-async function getDeviceById(ctx) {
-  const deviceData = await Model.findOne({ _id: ctx.params.id });
-  const sensors = await Sensor.find({ device: ctx.params.id });
-  if (deviceData !== null) {
-    ctx.body = { device: deviceData, sensors: sensors};
-    ctx.status = 200;
-  } else {
+
+async function getDeviceByNameAndGeneration(ctx) {
+  const { name, generation } = ctx.params;
+  const device = await Model.findOne({ name: name, generation: generation });
+  if (!device) {
     ctx.body = { error: "Not found" };
     ctx.status = 404;
+    return ctx;
   }
-  return ctx;
+  const sensors = await Sensor.find({ device: device._id });
+  ctx.status = 200;
+  ctx.body = { device: device, sensors: sensors };
 }
 
 /**
@@ -50,49 +48,11 @@ async function updateDeviceById(ctx) {
   ctx.status = 200;
 }
 
-/**
- * delete all devices
- */
-async function deleteDevices(ctx) {
-  /*const project = await Project.findById({ _id: ctx.header.project });
-  await Datasets.updateMany(
-    { device: project.datasets },
-    { $pull: { devices: project.devices } }
-  );
-  await Model.deleteMany({ _id: ctx.header.project });
-  await Project.updateOne(
-    { _id: ctx.header.project },
-    { $set: { devices: [] } }
-  );
-  ctx.body = { message: "deleted all devices" };
-  ctx.status = 200;
-  return ctx;*/
-}
 
-/**
- * delete a device specified by id
- */
-async function deleteDeviceById(ctx) {
-  /*const project = await Project.findById({ _id: ctx.header.project });
-  await Datasets.updateMany(
-    { device: project.datasets },
-    { $pull: { devices: ctx.params.id } }
-  );
-  await Project.updateOne(
-    { _id: ctx.header.project },
-    { $pull: { devices: ctx.params.id } }
-  );
-  await Model.findOneAndDelete({ _id: ctx.params.id });
-  ctx.body = { message: `deleted device with id: ${ctx.params.id}` };
-  ctx.status = 200;
-  return ctx;*/
-}
 
 module.exports = {
   getDevices,
-  getDeviceById,
+  getDeviceByNameAndGeneration,
   createDevice,
   updateDeviceById,
-  deleteDevices,
-  deleteDeviceById,
 };
