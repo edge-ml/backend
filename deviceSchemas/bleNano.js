@@ -95,5 +95,5 @@ exports.device = {
       },
     ],
   },
-  deviceInfo: { name: "BLESense", generation: "1" }
+  deviceInfo: { name: "NANO", generation: "1.0.0" }
 };

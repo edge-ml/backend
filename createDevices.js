@@ -4,6 +4,11 @@ const DeviceModel = require("./models/device").model;
 const SensorModel = require("./models/sensor").model;
 const util = require("util");
 
+module.exports.clearDevices = async() => {
+  await DeviceModel.collection.drop();
+  await SensorModel.collection.drop();
+} 
+
 const preprocessDevice = (device) => {
   const sensorTypeMap = device.sensorTypeMap;
   const parseSchema = device.parseSchema;
