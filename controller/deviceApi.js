@@ -4,6 +4,7 @@ const Dataset = require("../models/dataset").model;
 const DeviceApi = require("../models/deviceApi").model;
 const TimeSeries = require("../models/timeSeries").model;
 const Labeling = require("../models/labelDefinition").model;
+const LabelType = require("../models/labelType").model;
 
 async function switchActive(ctx) {
   const { authId } = ctx.state;
@@ -383,6 +384,9 @@ async function uploadDataset(ctx) {
 async function getProject(ctx) {
   try {
     const key = ctx.request.body.key;
+    
+    console.log(key)
+
     const deviceApi = await DeviceApi.findOne({
       deviceApiKey: key,
     });
@@ -410,14 +414,16 @@ async function getProject(ctx) {
           const tmpLabels = await Promise.all(
             x.labelings.map(async (a) => {
               const labeling = await Labeling.findOne({ _id: a.labelingId });
-              return a.labels.map((b) => {
+              return await Promise.all(a.labels.map(async (b) => {
+                console.log(b.type)
+                labelName = (await LabelType.findOne({ _id: b.type })).name;
                 return {
                   labelingName: labeling.name,
-                  name: b.name,
+                  name: labelName,
                   start: b.start,
                   end: b.end,
                 };
-              });
+              }));
             })
           );
           return {
