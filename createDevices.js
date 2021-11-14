@@ -5,8 +5,12 @@ const SensorModel = require("./models/sensor").model;
 const util = require("util");
 
 module.exports.clearDevices = async() => {
+  try {
   await DeviceModel.collection.drop();
   await SensorModel.collection.drop();
+  } catch (e) {
+    console.log("Devices could not be deleted or no devices exist")
+  }
 } 
 
 const preprocessDevice = (device) => {
