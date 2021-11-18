@@ -30,7 +30,7 @@ const device = {
   generation: "1.0.0",
   user: "",
   name: "deviceTestName",
-  sensors: []
+  sensors: [],
 };
 
 const firmware = {
@@ -84,6 +84,14 @@ const dataset = {
   video: {},
   results: [],
   name: "TestDataset",
+};
+
+const labeling_1 = {
+  labels: [
+    { name: "label11", color: "#ff00ff" },
+    { name: "label12", color: "#00ff00" },
+  ],
+  name: "Labeling_1",
 };
 
 console.log("Testing with config:");
@@ -243,8 +251,8 @@ describe("Testing API Routes", () => {
         .send({ key: deviceApiKey })
         .expect(200)
         .end(async (err, res) => {
-          expect(res.body).to.have.all.keys("datasets")
-          done(err)
+          expect(res.body).to.have.all.keys("datasets");
+          done(err);
         });
     });
 
@@ -254,7 +262,7 @@ describe("Testing API Routes", () => {
         .send({ key: "nonsense" })
         .expect(403)
         .end(async (err, res) => {
-          done(err)
+          done(err);
         });
     });
 
@@ -320,8 +328,6 @@ describe("Testing API Routes", () => {
       dataset.timeSeries = [];
       dataset.save();
     });
-
-    
 
     it("Delete the key", (done) => {
       request
@@ -537,10 +543,7 @@ describe("Testing API Routes", () => {
         .set({ Authorization: token, project: project._id })
         .expect(200)
         .end((err, res) => {
-          expect(res.body).to.have.all.keys(
-            "device",
-            "sensors"
-          );
+          expect(res.body).to.have.all.keys("device", "sensors");
           done(err);
         });
     });
@@ -737,10 +740,13 @@ describe("Testing API Routes", () => {
       request
         .post("/api/labelDefinitions")
         .set({ Authorization: token, project: project._id })
-        .send({ labels: [{ name: "Label1", color: "#ffffff" }], name: "TestLabeling" })
+        .send({
+          labels: [{ name: "Label1", color: "#ffffff" }],
+          name: "TestLabeling",
+        })
         .expect(201)
         .end((err, res) => {
-          labelType = {_id: res.body.labels[0]}
+          labelType = { _id: res.body.labels[0] };
           labelDefinition = res.body;
           done(err);
         });
@@ -890,6 +896,71 @@ describe("Testing API Routes", () => {
           dataset._id = res.body._id;
           done(err);
         });
+    });
+
+    describe("Testing /datasets/{id}/labels...", () => {
+      var generatedDataset;
+      var generatedLabeling;
+      var generatedLabels;
+      it("Add dataset", (done) => {
+        request
+          .post("/api/datasets")
+          .set({ Authorization: token, project: project._id })
+          .send({ ...dataset, _id: undefined })
+          .expect(201)
+          .end((err, res) => {
+            generatedDataset = res.body;
+            done(err);
+          });
+      });
+      it("Add labeling", (done) => {
+        request
+          .post("/api/labelDefinitions")
+          .set({ Authorization: token, project: project._id })
+          .send(labeling_1)
+          .expect(201)
+          .end((err, res) => {
+            generatedLabeling = res.body;
+            done(err);
+          });
+      });
+
+      it("add label to dataset", (done) => {
+        const newLabel = {
+          type: generatedLabeling.labels[0],
+          start: 0,
+          end: 1,
+        };
+        request
+          .post(
+            `/api/datasets/${generatedDataset._id}/labels/${generatedLabeling._id}`
+          )
+          .set({ Authorization: token, project: project._id })
+          .send(newLabel)
+          .expect(200)
+          .end((err, res) => {
+            expect(res.body).to.have.all.keys("type", "start", "end", "_id");
+            done(err);
+          });
+      });
+      it("Add another label to dataset", (done) => {
+        const newLabel = {
+          type: generatedLabeling.labels[0],
+          start: 256,
+          end: 512,
+        };
+        request
+          .post(
+            `/api/datasets/${generatedDataset._id}/labels/${generatedLabeling._id}`
+          )
+          .set({ Authorization: token, project: project._id })
+          .send(newLabel)
+          .expect(200)
+          .end((err, res) => {
+            expect(res.body).to.have.all.keys("type", "start", "end", "_id");
+            done(err);
+          });
+      });
     });
 
     describe("Testing /datasets/{id}/results...", () => {
