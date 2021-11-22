@@ -66,9 +66,9 @@ exports.device = {
         id: 0,
         type: "xyz",
         "parse-scheme": [
-          { name: "val", type: "float", "scale-factor": 1 },
-          { name: "val", type: "float", "scale-factor": 1 },
-          { name: "val", type: "float", "scale-factor": 1 },
+          { name: "x", type: "float", "scale-factor": 1 },
+          { name: "y", type: "float", "scale-factor": 1 },
+          { name: "z", type: "float", "scale-factor": 1 },
         ],
       },
 
@@ -82,9 +82,9 @@ exports.device = {
         id: 2,
         type: "color",
         "parse-scheme": [
-          { name: "val", type: "int16", "scale-factor": 1 },
-          { name: "val", type: "int16", "scale-factor": 1 },
-          { name: "val", type: "int16", "scale-factor": 1 },
+          { name: "r", type: "int16", "scale-factor": 1 },
+          { name: "g", type: "int16", "scale-factor": 1 },
+          { name: "b", type: "int16", "scale-factor": 1 },
         ],
       },
 
@@ -95,5 +95,5 @@ exports.device = {
       },
     ],
   },
-  deviceInfo: { name: "NANO", generation: "1.0.0" }
+  deviceInfo: { name: "NANO", generation: "1.0.0" },
 };
