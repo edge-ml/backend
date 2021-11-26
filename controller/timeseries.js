@@ -16,10 +16,19 @@ async function appendData(ctx) {
       return ctx;
     }
 
+    var globalStart = undefined;
+    var globalEnd = undefined;
+
     const timeSeries = ctx.request.body;
     const timeSeriesId = timeSeries.map((elm) => {
+      const start = Math.min(...elm.data.map((d) => d.timestamp));
+      const end = Math.max(...elm.data.map((d) => d.timestamp));
+      globalStart = globalStart ? Math.min(start, globalStart) : start;
+      globalEnd = globalEnd ? Math.max(end, globalEnd) : end;
       return {
         data: elm.data,
+        start: start,
+        end: end,
         _id: dataset.timeSeries.find(
           (timeSeries) => timeSeries.name === elm.name
         )._id,
@@ -27,8 +36,8 @@ async function appendData(ctx) {
     });
 
     // Assume all timeseris have the same timestamps
-    const minTime = Math.min(...timeSeries[0].data.map((d) => d.timestamp));
-    const maxTime = Math.max(...timeSeries[0].data.map((d) => d.timestamp));
+    //const minTime = Math.min(...timeSeries[0].data.map((d) => d.timestamp));
+    //const maxTime = Math.max(...timeSeries[0].data.map((d) => d.timestamp));
 
     await Promise.all(
       timeSeriesId.map((elm) =>
@@ -36,8 +45,8 @@ async function appendData(ctx) {
           { _id: elm._id },
           {
             $push: { data: { $each: elm.data, $sort: { timestamp: 1 } } },
-            $min: { start: minTime },
-            $max: { end: maxTime },
+            $min: { start: elm.start },
+            $max: { end: elm.end },
           }
         )
       )
@@ -45,8 +54,8 @@ async function appendData(ctx) {
     await DatasetModel.findOneAndUpdate(
       { _id: ctx.params.datasetId },
       {
-        $max: { end: maxTime },
-        $min: { start: minTime },
+        $max: { end: globalEnd },
+        $min: { start: globalStart },
       }
     );
 
