@@ -1,23 +1,73 @@
 const Project = require("../models/project").model;
+const axios = require("axios");
+const config = require("config");
 
 function filterProjectNonAdmin(ctx, project) {
   const { authId } = ctx.state;
-  return authId === String(project.admin)
+  return authId === String(project.admin._id)
     ? project
-    : { name: project.name, _id: project._id, admin: project.admin, enableDeviceApi: project.enableDeviceApi };
+    : {
+        name: project.name,
+        _id: project._id,
+        admin: project.admin,
+        enableDeviceApi: project.enableDeviceApi,
+      };
+}
+
+async function addUserNamesAndCleanProject(retrievedProjects, ctx) {
+  var userData = (
+    await Promise.all(
+      retrievedProjects.map((project) => {
+        console.log([project.admin, ...project.users]);
+        return axios.post(
+          config.auth + "/userName",
+          [project.admin, ...project.users],
+          { headers: { Authorization: ctx.headers.authorization } }
+        );
+      })
+    )
+  ).map((user) => user.data);
+
+  // Delete users not present in auth servie
+  const result = [];
+  await Promise.all(
+    retrievedProjects.map((project, index) => {
+      const admin = userData[index][0];
+      const users = userData[index].slice(1).filter((elm) => !elm.error);
+
+      if (admin.error) {
+        return Project.deleteOne({ _id: project._id });
+      }
+
+      project.users = users.map((elm) => elm._id);
+      result.push({ ...project.toObject(), admin: admin, users: users });
+      return project.save();
+    })
+  );
+  return result;
 }
 
 /**
  * get all projects where the user has access to
  */
 async function getProjects(ctx, next) {
-  const { authId } = ctx.state;
-  const body = await Project.find({
-    $or: [{ admin: authId }, { users: authId }],
-  });
-  ctx.body = body.map((elm) => filterProjectNonAdmin(ctx, elm));
-  ctx.status = 200;
-  return ctx;
+  try {
+    const { authId } = ctx.state;
+    const body = await Project.find({
+      $or: [{ admin: authId }, { users: authId }],
+    });
+
+    const result = await addUserNamesAndCleanProject(body, ctx);
+    console.log(result);
+
+    ctx.body = result.map((elm) => filterProjectNonAdmin(ctx, elm));
+    ctx.status = 200;
+    return ctx;
+  } catch (err) {
+    console.log(err);
+    ctx.status = 500;
+    return ctx;
+  }
 }
 /*
  * Creates a new project
@@ -102,15 +152,17 @@ async function getProjectById(ctx) {
       { $or: [{ admin: authId }, { users: authId }] },
     ],
   });
-  ctx.body = filterProjectNonAdmin(ctx, project);
+
+  const result = await addUserNamesAndCleanProject([project], ctx);
+
+  ctx.body = filterProjectNonAdmin(ctx, result[0]);
   ctx.status = 200;
 }
-
 
 module.exports = {
   getProjects,
   deleteProjectById,
   createProject,
   updateProjectById,
-  getProjectById
+  getProjectById,
 };
