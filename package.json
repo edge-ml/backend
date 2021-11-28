@@ -18,6 +18,7 @@
     "license": "MIT",
     "dependencies": {
         "@koa/cors": "^2.2.3",
+        "axios": "^0.24.0",
         "config": "^1.30.0",
         "eslint_d": "^6.0.1",
         "hat": "*",
@@ -36,7 +37,6 @@
         "koa2-swagger-ui": "*",
         "mongoose": "^5.11.18",
         "request": "^2.88.2",
-        "request-promise-native": "^1.0.9",
         "yamljs": "^0.3.0"
     },
     "devDependencies": {

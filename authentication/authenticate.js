@@ -1,5 +1,6 @@
 const config = require("config");
 const request = require("request-promise-native");
+const axios = require("axios").default;
 const Model = require("../models/user").model;
 
 module.exports = async (ctx, next) => {
@@ -21,12 +22,14 @@ module.exports = async (ctx, next) => {
       const token = ctx.headers.authorization.replace("Bearer ", "");
       // call auth server to authenticate with jwt
       const authRoute = config.auth + "/authenticate";
-      const result = await request
-        .post(authRoute)
-        .auth(null, null, true, token);
+      const result = await axios.post(
+        authRoute,
+        {},
+        { headers: { Authorization: ctx.headers.authorization } }
+      );
       // auth server returns user id, to store with user object
       // check if we see this user for the first time: do we have this authId already in db?
-      const authId = JSON.parse(result).userId;
+      const authId = result.data.userId;
       const user = await Model.find({ authId });
       if (!user.length) {
         // if not, create a new user object
@@ -46,6 +49,7 @@ module.exports = async (ctx, next) => {
       return ctx;
     }
   } catch (err) {
+    console.log(err);
     ctx.status = 401;
     ctx.body = {
       error: "Unauthorized",
