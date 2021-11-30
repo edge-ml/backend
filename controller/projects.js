@@ -159,10 +159,28 @@ async function getProjectById(ctx) {
   ctx.status = 200;
 }
 
+async function getProjectSensorStreams(ctx) {
+  const { authId } = ctx.state;
+  const project = await Project.findOne({
+    $and: [
+      { _id: ctx.params.id },
+      { $or: [{ admin: authId }, { users: authId }] },
+    ],
+  });
+
+  // TODO: assemble list of all sensor streams
+
+  ctx.body = { "sensorStreams": ["Acc_X", "Acc_Y"]};
+  ctx.status = 200;
+
+  return ctx
+}
+
 module.exports = {
   getProjects,
   deleteProjectById,
   createProject,
   updateProjectById,
   getProjectById,
+  getProjectSensorStreams
 };
