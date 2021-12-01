@@ -1,4 +1,5 @@
 const Project = require("../models/project").model;
+const Dataset = require("../models/dataset").model;
 const axios = require("axios");
 const config = require("config");
 
@@ -168,12 +169,21 @@ async function getProjectSensorStreams(ctx) {
     ],
   });
 
-  // TODO: assemble list of all sensor streams
+  const datasets = await Dataset.find({ _id: project.datasets })
+    .populate("timeSeries")
+    .exec();
 
-  ctx.body = { "sensorStreams": ["Acc_X", "Acc_Y"]};
+  ctx.body = {
+    sensorStreams: [
+      ...new Set([
+        datasets
+          .map((dataset) => dataset.timeSeries.map((ts) => ts.name))
+          .flat(),
+      ]),
+    ],
+  };
   ctx.status = 200;
-
-  return ctx
+  return ctx;
 }
 
 module.exports = {
@@ -182,5 +192,5 @@ module.exports = {
   createProject,
   updateProjectById,
   getProjectById,
-  getProjectSensorStreams
+  getProjectSensorStreams,
 };
