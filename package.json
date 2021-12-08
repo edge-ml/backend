@@ -4,8 +4,8 @@
     "description": "Backend for Explorer",
     "main": "server.js",
     "scripts": {
-        "start": "node $NODE_DEBUG_OPTION server.js",
-        "startTestENV": "NODE_ENV=test node $NODE_DEBUG_OPTION server.js",
+        "start": "node server.js",
+        "startTestENV": "NODE_ENV=test node server.js",
         "start:docker": "NODE_ENV=docker node server.js",
         "test": "NODE_ENV=test nyc mocha --exit",
         "createDevices": "node createDevices.js"
