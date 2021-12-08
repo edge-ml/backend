@@ -45,8 +45,12 @@ async function createLabelDefinition(ctx) {
       ctx.request.body.labels &&
       ctx.request.body.labels.every((elm) => typeof elm === "object")
     ) {
+      const project = await ProjectModel.findOne({ _id: ctx.header.project });
       const Labeling = await Model.findOne({
-        name: ctx.request.body.name,
+        $and: [
+          { name: ctx.request.body.name },
+          { _id: project.labelDefinitions },
+        ],
       }).populate("labels");
       if (Labeling) {
         const compareLabels = Labeling.labels.map((elm) => elm.name);
