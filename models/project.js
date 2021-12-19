@@ -78,6 +78,16 @@ Project.path("name").validate(
   "Invalid project name"
 );
 
+Project.pre("validate", function (next) {
+  if (this.users.includes(this.admin)) {
+    next(new Error("Admin cannot be a user of the project"));
+  }
+  if (new Set(this.users.map(elm => elm.toString())).size !== this.users.length) {
+    next(new Error("Users must be unique"));
+  }
+  next();
+})
+
 Project.pre("remove", async function (next) {
   await Dataset.deleteMany({ _id: { $in: this.datasets } });
   await Experiment.deleteMany({ _id: { $in: this.experiments } });
@@ -87,7 +97,7 @@ Project.pre("remove", async function (next) {
   await Service.deleteMany({ _id: { $in: this.services } });
   await Sensor.deleteMany({ _id: { $in: this.sensors } });
   await Firmware.deleteMany({ _id: { $in: this.firmware } });
-  await DeviceApi.deleteMany({projectId: this._id});
+  await DeviceApi.deleteMany({ projectId: this._id });
   next();
 });
 
