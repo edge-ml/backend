@@ -105,8 +105,26 @@ async function updateLabelDefinitionById(ctx) {
     const { labeling, labels } = ctx.request.body;
     const project = await ProjectModel.findOne({ _id: ctx.header.project });
     if (project.labelDefinitions.includes(ctx.params.id)) {
-      await Model.findByIdAndUpdate(ctx.params.id, { $set: labeling });
-
+      const newLabeling = await Model.findByIdAndUpdate(
+        ctx.params.id,
+        { $set: labeling },
+        { new: true }
+      )
+        .populate("labels")
+        .exec();
+      const newLabels = {};
+      newLabeling.labels.forEach((elm) => {
+        newLabels[elm._id] = elm.name;
+      });
+      labels.forEach((elm) => {
+        newLabels[elm._id] = elm.name;
+      });
+      const newLabelNames = Object.values(newLabels);
+      if (new Set(newLabelNames).size != newLabelNames.length) {
+        ctx.body = { error: "Labels must have unique names in a labeling" };
+        ctx.status = 400;
+        return ctx;
+      }
       await Promise.all(
         labels.map((elm) => LabelModel.findOneAndUpdate({ _id: elm._id }, elm))
       );
@@ -191,6 +209,20 @@ async function deleteLabelDefinitionById(ctx) {
 async function addLabelTypes(ctx) {
   const project = await ProjectModel.findOne({ _id: ctx.header.project });
   if (project.labelDefinitions.includes(ctx.params.id)) {
+    const existingLabelNames = (await Model.find({ _id: ctx.params.id })).map(
+      (elm) => elm.name
+    );
+    if (
+      existingLabelNames.length + ctx.request.body.length !=
+      new Set([
+        ...ctx.request.body.map((elm) => elm.name),
+        ...existingLabelNames,
+      ]).size
+    ) {
+      ctx.body = { error: "Labels must have unique names in a labeling" };
+      ctx.status = 400;
+      return ctx;
+    }
     const labelTypes = await LabelModel.insertMany(ctx.request.body);
     const labelIds = labelTypes.map((elm) => elm._id);
     await ProjectModel.findByIdAndUpdate(ctx.header.project, {
