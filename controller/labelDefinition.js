@@ -52,6 +52,8 @@ async function createLabelDefinition(ctx) {
           { _id: project.labelDefinitions },
         ],
       }).populate("labels");
+    
+      // Merge labeling if labeling with this name already exists
       if (Labeling) {
         const compareLabels = Labeling.labels.map((elm) => elm.name);
         const newLabels = ctx.request.body.labels.filter(
