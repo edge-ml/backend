@@ -175,11 +175,11 @@ async function getProjectSensorStreams(ctx) {
 
   ctx.body = {
     sensorStreams: [
-      ...new Set([
+      ...new Set(
         datasets
           .map((dataset) => dataset.timeSeries.map((ts) => ts.name))
           .flat(),
-      ]),
+      ),
     ],
   };
   ctx.status = 200;
