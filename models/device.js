@@ -14,6 +14,10 @@ const Device = new mongoose.Schema({
 		type: String,
 		required: true,
 		unique: true
+	},
+	maxSampleRate: {
+		type: Number,
+		required: true
 	}
 });
 

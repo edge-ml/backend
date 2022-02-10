@@ -262,5 +262,5 @@ exports.device = {
       },
     ],
   },
-  deviceInfo: { name: "NICLA", generation: "1.0.0" },
+  deviceInfo: { name: "NICLA", generation: "1.0.0", maxSampleRate: 30 },
 };
