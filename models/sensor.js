@@ -7,7 +7,7 @@ const Sensor = new mongoose.Schema({
   },
   name: {
     type: String,
-    required: true
+    required: true,
   },
   typeName: {
     type: String,
@@ -16,6 +16,10 @@ const Sensor = new mongoose.Schema({
   device: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
+  },
+  sampleRate: {
+    type: Number,
+    default: 10,
   },
   parseScheme: {
     type: [
