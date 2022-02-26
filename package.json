@@ -5,6 +5,7 @@
     "main": "server.js",
     "scripts": {
         "start": "node server.js",
+        "stats": "node stats.js",
         "startTestENV": "NODE_ENV=test node server.js",
         "start:docker": "NODE_ENV=docker node server.js",
         "test": "NODE_ENV=test nyc mocha --exit",
@@ -19,6 +20,7 @@
     "dependencies": {
         "@koa/cors": "^2.2.3",
         "axios": "^0.24.0",
+        "cli-table": "^0.3.11",
         "config": "^1.30.0",
         "eslint_d": "^6.0.1",
         "hat": "*",
@@ -37,6 +39,7 @@
         "koa2-swagger-ui": "*",
         "mongoose": "^5.11.18",
         "request": "^2.88.2",
+        "table": "^6.8.0",
         "yamljs": "^0.3.0"
     },
     "devDependencies": {
