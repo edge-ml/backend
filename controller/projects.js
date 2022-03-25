@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Project = require("../models/project").model;
 const Dataset = require("../models/dataset").model;
 const axios = require("axios");
@@ -8,18 +9,17 @@ function filterProjectNonAdmin(ctx, project) {
   return authId === String(project.admin._id)
     ? project
     : {
-        name: project.name,
-        _id: project._id,
-        admin: project.admin,
-        enableDeviceApi: project.enableDeviceApi,
-      };
+      name: project.name,
+      _id: project._id,
+      admin: project.admin,
+      enableDeviceApi: project.enableDeviceApi,
+    };
 }
 
 async function addUserNamesAndCleanProject(retrievedProjects, ctx) {
   var userData = (
     await Promise.all(
       retrievedProjects.map((project) => {
-        console.log([project.admin, ...project.users]);
         return axios.post(
           config.auth + "/userName",
           [project.admin, ...project.users],
@@ -59,13 +59,11 @@ async function getProjects(ctx, next) {
     });
 
     const result = await addUserNamesAndCleanProject(body, ctx);
-    console.log(result);
 
     ctx.body = result.map((elm) => filterProjectNonAdmin(ctx, elm));
     ctx.status = 200;
     return ctx;
   } catch (err) {
-    console.log(err);
     ctx.status = 500;
     return ctx;
   }
@@ -89,10 +87,10 @@ async function createProject(ctx) {
     if (e.code === 11000 && e.keyPattern.admin && e.keyPattern.name) {
       ctx.body = { error: "A project with this name already exists" };
       ctx.status = 400;
-    } else {
-      ctx.status = 400;
-      ctx.body = { error: e.errors.name.properties.message };
+      return ctx;
     }
+    ctx.body = { error: e.message };
+    ctx.status = 400;
     return ctx;
   }
 }

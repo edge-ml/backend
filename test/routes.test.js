@@ -31,6 +31,7 @@ const device = {
   user: "",
   name: "deviceTestName",
   sensors: [],
+  maxSampleRate: 30
 };
 
 const firmware = {
