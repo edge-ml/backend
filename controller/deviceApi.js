@@ -384,8 +384,6 @@ async function uploadDataset(ctx) {
 async function getProject(ctx) {
   try {
     const key = ctx.request.body.key;
-    
-    console.log(key)
 
     const deviceApi = await DeviceApi.findOne({
       deviceApiKey: key,
