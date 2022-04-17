@@ -38,6 +38,15 @@ router.get('/:id', async (ctx) => {
 });
 
 /**
+ * get dataset lock by id for current user
+ * route:					/datasets/:id
+ * method type: 	GET
+ */
+ router.get('/canedit/:id', async (ctx) => {
+	await controller.getDatasetLockById(ctx);
+});
+
+/**
  * create a new dataset
  * route:					/datasets
  * method type: 	POST
@@ -53,6 +62,15 @@ router.post('/', KoaBody({jsonLimit: '50mb'}), async (ctx) => {
  */
 router.put('/:id', KoaBody({jsonLimit: '50mb'}), async (ctx) => {
 	await controller.updateDatasetById(ctx);
+});
+
+/**
+ * update canEdit of a specific dataset
+ * route:					/datasets/:id/canEdit
+ * method type: 	PUT
+ */
+ router.put('/canedit/:id', KoaBody(), async (ctx) => {
+	await controller.canEditDatasetById(ctx);
 });
 
 /**

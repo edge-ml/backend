@@ -68,6 +68,26 @@ async function getDatasetById(ctx) {
 }
 
 /**
+ * get dataset lock by id
+ */
+ async function getDatasetLockById(ctx) {
+  const project = await ProjectModel.findOne({ _id: ctx.header.project });
+  const lock = await Model.find({
+    $and: [{ _id: ctx.params.id }, { _id: project.datasets }],
+  })
+    .select("canEdit")
+    .exec();
+  if (lock.length === 1) {
+    ctx.body = { canEdit: lock[0].canEdit };
+    ctx.status = 200;
+  } else {
+    ctx.body = { error: "Dataset not in requested project" };
+    ctx.status = 400;
+  }
+  return ctx.body;
+}
+
+/**
  * create a new dataset
  */
 async function createDataset(ctx) {
@@ -152,6 +172,26 @@ async function updateDatasetById(ctx) {
   }
 }
 
+async function canEditDatasetById(ctx) { // we could use the update method above, but it sends the whole dataset, which is unnecessarily SLOW
+  try {
+    const { canEdit } = ctx.request.body;
+    const project = await ProjectModel.findOne({ _id: ctx.header.project });
+    if (project.datasets.includes(ctx.params.id)) {
+      await Model.findByIdAndUpdate(ctx.params.id, {
+        $set: { canEdit: canEdit }
+      });
+      ctx.body = { message: `changed canEdit for dataset with id: ${ctx.params.id}` };
+      ctx.status = 200;
+    } else {
+      ctx.body = { error: "Forbidden" };
+      ctx.status = 403;
+    }
+    return ctx;
+  } catch (e) {
+    console.log(e);
+  }
+}
+
 /**
  * delete a dataset specified by id
  */
@@ -185,7 +225,9 @@ async function deleteDatasetById(ctx) {
 module.exports = {
   getDatasets,
   getDatasetById,
+  getDatasetLockById,
   createDataset,
   updateDatasetById,
+  canEditDatasetById,
   deleteDatasetById,
 };
