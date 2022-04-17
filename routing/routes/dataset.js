@@ -51,7 +51,7 @@ router.post('/', KoaBody({jsonLimit: '50mb'}), async (ctx) => {
  * route:					/datasets/:id
  * method type: 	PUT
  */
-router.put('/:id', KoaBody(), async (ctx) => {
+router.put('/:id', KoaBody({jsonLimit: '50mb'}), async (ctx) => {
 	await controller.updateDatasetById(ctx);
 });
 
