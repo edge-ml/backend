@@ -5,6 +5,7 @@ const DeviceApi = require("../models/deviceApi").model;
 const TimeSeries = require("../models/timeSeries").model;
 const Labeling = require("../models/labelDefinition").model;
 const LabelType = require("../models/labelType").model;
+const ProjectModel = require("../models/project").model;
 
 async function switchActive(ctx) {
   const { authId } = ctx.state;
@@ -85,48 +86,53 @@ async function removeKey(ctx) {
 }
 
 async function initDatasetIncrement(ctx) {
-  const body = ctx.request.body;
-  const deviceApi = await DeviceApi.findOne({
-    deviceApiKey: body.deviceApiKey,
-  });
+  try {
+    const body = ctx.request.body;
+    const deviceApi = await DeviceApi.findOne({
+      deviceApiKey: body.deviceApiKey,
+    });
 
-  if (!body.name) {
-    ctx.body = { error: "Wrong input parameters" };
-    ctx.status = 400;
+    if (!body.name) {
+      ctx.body = { error: "Wrong input parameters" };
+      ctx.status = 400;
+      return ctx;
+    }
+
+    if (!deviceApi) {
+      ctx.body = { error: "Invalid key" };
+      ctx.status = 403;
+      return ctx;
+    }
+    const project = await Project.findOne(deviceApi.projectId);
+    if (!project.enableDeviceApi) {
+      ctx.body = { error: "This feature is disabled" };
+      ctx.status = 403;
+      return ctx;
+    }
+
+    const dataset = Dataset({
+      name: body.name,
+      metaData: body.metaData,
+      userId: deviceApi.userId,
+      start: 9999999999999,
+      end: 0,
+    });
+
+    dataset.save();
+    await Project.findByIdAndUpdate(deviceApi.projectId, {
+      $push: { datasets: dataset._id },
+    });
+
+    const datasetKey = crypto.randomBytes(64).toString("base64");
+    deviceApi.datasets.push({ dataset: dataset._id, datasetKey: datasetKey });
+    await deviceApi.save();
+
+    ctx.body = { datasetKey: datasetKey };
+    ctx.status = 200;
     return ctx;
+  } catch (e) {
+    console.log(e);
   }
-
-  if (!deviceApi) {
-    ctx.body = { error: "Invalid key" };
-    ctx.status = 403;
-    return ctx;
-  }
-  const project = await Project.findOne(deviceApi.projectId);
-  if (!project.enableDeviceApi) {
-    ctx.body = { error: "This feature is disabled" };
-    ctx.status = 403;
-    return ctx;
-  }
-
-  const dataset = Dataset({
-    name: body.name,
-    userId: deviceApi.userId,
-    start: 9999999999999,
-    end: 0,
-  });
-
-  dataset.save();
-  await Project.findByIdAndUpdate(deviceApi.projectId, {
-    $push: { datasets: dataset._id },
-  });
-
-  const datasetKey = crypto.randomBytes(64).toString("base64");
-  deviceApi.datasets.push({ dataset: dataset._id, datasetKey: datasetKey });
-  await deviceApi.save();
-
-  ctx.body = { datasetKey: datasetKey };
-  ctx.status = 200;
-  return ctx;
 }
 
 async function addDatasetIncrement(ctx) {
@@ -263,7 +269,7 @@ async function addDatasetIncrementIot(ctx) {
 async function addDatasetIncrementBatch(ctx) {
   try {
     const body = ctx.request.body;
-    const { datasetKey, data } = body;
+    const { datasetKey, data, datasetLabel } = body;
     const deviceApi = await DeviceApi.findOne({
       "datasets.datasetKey": datasetKey,
     });
@@ -324,18 +330,67 @@ async function addDatasetIncrementBatch(ctx) {
     }
     ctx.globalStart = Math.min(...data.map((elm) => elm.start));
     ctx.globalEnd = Math.max(...data.map((elm) => elm.end));
-    await Dataset.findOneAndUpdate(
+    const dataset = await Dataset.findOneAndUpdate(
       { _id: datasetId },
       {
         $max: { end: ctx.globalEnd },
         $min: { start: ctx.globalStart },
-      }
+      },
+      { new: true }
     );
+
+    // Create a label for the whole dataset if needed
+
+    // Create labeling if it does not exist
+    if (datasetLabel) {
+      const project = await ProjectModel.findOne({ _id: deviceApi.projectId });
+      var [labelingName, labelName] = datasetLabel.split("_");
+      var labeling = await Labeling.findOne({
+        _id: project.labelDefinitions,
+        name: labelingName,
+      });
+      if (!labeling) {
+        labeling = await Labeling.create({ name: labelingName });
+        await ProjectModel.findByIdAndUpdate(deviceApi.projectId, {
+          $push: { labelDefinitions: labeling._id },
+        });
+      }
+      var label = await LabelType.findOne({
+        _id: labeling.labels,
+        name: labelName,
+      });
+      if (!label) {
+        label = await LabelType.create({ name: labelName });
+        await Labeling.findByIdAndUpdate(labeling._id, {
+          $push: { labels: label._id },
+        });
+        await ProjectModel.findByIdAndUpdate(deviceApi.projectId, {
+          $push: { labelTypes: label._id },
+        });
+      }
+
+      // Label the dataset
+      await Dataset.findOneAndUpdate(
+        { _id: datasetId },
+        {
+          labelings: [
+            {
+              labelingId: labeling._id,
+              labels: [
+                { type: label._id, start: dataset.start, end: dataset.end },
+              ],
+            },
+          ],
+        },
+        { new: true }
+      );
+    }
 
     ctx.status = 200;
     ctx.body = { message: "Added data" };
     return ctx;
   } catch (e) {
+    console.log(e);
     ctx.status = 400;
     ctx.body = { error: "Error adding increment" };
   }
@@ -412,16 +467,18 @@ async function getProject(ctx) {
           const tmpLabels = await Promise.all(
             x.labelings.map(async (a) => {
               const labeling = await Labeling.findOne({ _id: a.labelingId });
-              return await Promise.all(a.labels.map(async (b) => {
-                console.log(b.type)
-                labelName = (await LabelType.findOne({ _id: b.type })).name;
-                return {
-                  labelingName: labeling.name,
-                  name: labelName,
-                  start: b.start,
-                  end: b.end,
-                };
-              }));
+              return await Promise.all(
+                a.labels.map(async (b) => {
+                  console.log(b.type);
+                  labelName = (await LabelType.findOne({ _id: b.type })).name;
+                  return {
+                    labelingName: labeling.name,
+                    name: labelName,
+                    start: b.start,
+                    end: b.end,
+                  };
+                })
+              );
             })
           );
           return {

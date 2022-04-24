@@ -13,6 +13,11 @@ const Dataset = new mongoose.Schema({
 		ref: "User",
 		required: [true, "object needs to be associated with user"],
 	},
+	metaData: {
+		type: Map,
+		of: String,
+		default: {}
+	},
 	name: {
 		type: String,
 		required: [true, "Dataset needs a name"]
