@@ -52,11 +52,18 @@ async function getDatasets(ctx) {
  */
 async function getDatasetById(ctx) {
   const project = await ProjectModel.findOne({ _id: ctx.header.project });
-  const dataset = await Model.find({
-    $and: [{ _id: ctx.params.id }, { _id: project.datasets }],
-  })
-    .populate("timeSeries")
-    .exec();
+  var dataset = undefined;
+  if (ctx.request.query.onlyMetaData) {
+    dataset = await Model.find({
+      $and: [{ _id: ctx.params.id }, { _id: project.datasets }],
+    });
+  } else {
+    dataset = await Model.find({
+      $and: [{ _id: ctx.params.id }, { _id: project.datasets }],
+    })
+      .populate("timeSeries")
+      .exec();
+  }
   if (dataset.length === 1) {
     ctx.body = dataset[0];
     ctx.status = 200;
@@ -137,7 +144,7 @@ async function updateDatasetById(ctx) {
             }
           })
         );
-        dataset.timeSeries = timeSeries.map(elm => elm._id);
+        dataset.timeSeries = timeSeries.map((elm) => elm._id);
       }
       await Model.findByIdAndUpdate(ctx.params.id, dataset);
       ctx.body = { message: `updated dataset with id: ${ctx.params.id}` };
