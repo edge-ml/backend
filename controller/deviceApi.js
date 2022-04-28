@@ -7,6 +7,8 @@ const Labeling = require("../models/labelDefinition").model;
 const LabelType = require("../models/labelType").model;
 const ProjectModel = require("../models/project").model;
 
+const { generateRandomColor } = require("../utils/colorService");
+
 async function switchActive(ctx) {
   const { authId } = ctx.state;
   const body = ctx.request.body;
@@ -336,7 +338,7 @@ async function addDatasetIncrementBatch(ctx) {
         $max: { end: ctx.globalEnd },
         $min: { start: ctx.globalStart },
       },
-      { new: true }
+      { new: true, returnOriginal: true }
     );
 
     // Create a label for the whole dataset if needed
@@ -355,12 +357,16 @@ async function addDatasetIncrementBatch(ctx) {
           $push: { labelDefinitions: labeling._id },
         });
       }
+
       var label = await LabelType.findOne({
         _id: labeling.labels,
         name: labelName,
       });
       if (!label) {
-        label = await LabelType.create({ name: labelName });
+        label = await LabelType.create({
+          name: labelName,
+          color: generateRandomColor(),
+        });
         await Labeling.findByIdAndUpdate(labeling._id, {
           $push: { labels: label._id },
         });
@@ -381,8 +387,7 @@ async function addDatasetIncrementBatch(ctx) {
               ],
             },
           ],
-        },
-        { new: true }
+        }
       );
     }
 
