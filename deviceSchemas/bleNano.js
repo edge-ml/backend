@@ -53,12 +53,12 @@ exports.device = {
       type: 3,
       "type-name": "single_int",
     },
-
+    /*
     9: {
       name: "GESTURE",
       type: 3,
       "type-name": "single_int",
-    },
+    },*/
   },
   parseSchema: {
     types: [

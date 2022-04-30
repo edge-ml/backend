@@ -25,4 +25,8 @@ router.put('/:id', KoaBody(), async (ctx) => {
     await controller.updateProjectById(ctx);
 });
 
+router.get('/:id/sensorStreams', async (ctx) => {
+    await controller.getProjectSensorStreams(ctx);
+});
+
 module.exports = router

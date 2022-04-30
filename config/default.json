@@ -1,4 +1,5 @@
 {
 	"db": "mongodb://localhost:27017/aura_dev",
-	"auth": "http://localhost:3002/auth"
+	"auth": "http://localhost:3002/auth",
+	"secret": "default_secret" 
 }

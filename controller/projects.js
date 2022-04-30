@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Project = require("../models/project").model;
+const Dataset = require("../models/dataset").model;
 const axios = require("axios");
 const config = require("config");
 
@@ -157,10 +158,37 @@ async function getProjectById(ctx) {
   ctx.status = 200;
 }
 
+async function getProjectSensorStreams(ctx) {
+  const { authId } = ctx.state;
+  const project = await Project.findOne({
+    $and: [
+      { _id: ctx.params.id },
+      { $or: [{ admin: authId }, { users: authId }] },
+    ],
+  });
+
+  const datasets = await Dataset.find({ _id: project.datasets })
+    .populate("timeSeries")
+    .exec();
+
+  ctx.body = {
+    sensorStreams: [
+      ...new Set(
+        datasets
+          .map((dataset) => dataset.timeSeries.map((ts) => ts.name))
+          .flat(),
+      ),
+    ],
+  };
+  ctx.status = 200;
+  return ctx;
+}
+
 module.exports = {
   getProjects,
   deleteProjectById,
   createProject,
   updateProjectById,
   getProjectById,
+  getProjectSensorStreams,
 };

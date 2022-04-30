@@ -62,7 +62,11 @@ const Dataset = new mongoose.Schema({
 		type: mongoose.Schema.Types.ObjectId,
 		ref: "Experiment",
 		default: null,
-	}
+	},
+	canEdit: {
+		type: Boolean,
+		default: true,
+	},
 });
 
 module.exports = {
