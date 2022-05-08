@@ -496,6 +496,7 @@ async function getProject(ctx) {
               };
             }),
             labels: tmpLabels,
+            metaData: x.metaData
           };
         })
       ),
