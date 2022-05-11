@@ -111,7 +111,7 @@ async function deleteProjectById(ctx) {
     ctx.status = 400;
     return ctx;
   }
-  project.remove();
+  await project.remove();
   ctx.body = { message: `deleted project with id: ${ctx.params.id}` };
   ctx.status = 200;
   return ctx;
