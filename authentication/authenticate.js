@@ -12,23 +12,21 @@ module.exports = async (ctx, next) => {
 	try {
 		if (
 			url[2].toLowerCase() === 'deviceapi'
-      && url[3].toLowerCase() !== 'deletekey'
-      && url[3].toLowerCase() !== 'switchactive'
-      && url[3].toLowerCase() !== 'getkey'
-      && url[3].toLowerCase() !== 'setkey'
+			&& url[3].toLowerCase() !== 'deletekey'
+			&& url[3].toLowerCase() !== 'switchactive'
+			&& url[3].toLowerCase() !== 'getkey'
+			&& url[3].toLowerCase() !== 'setkey'
 		) {
 			return next();
 		}
 	} catch (err) {
-		console.log(err);
 	}
 	let userId;
 	try {
 		const token = ctx.headers.authorization.split(' ')[1];
 		userId = verifyAccessToken(token);
 	} catch (err) {
-		console.log(err);
-		ctx.status(401);
+		ctx.status = 401;
 		ctx.body = {
 			error: 'Unauthorized',
 		};

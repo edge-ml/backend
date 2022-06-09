@@ -6,7 +6,8 @@ const LabelType = new mongoose.Schema({
 		required: [true, 'please enter a labelType name']
 	},
 	color: {
-		type: String
+		type: String,
+		required: [true, 'a label needs a color']
 	}
 });
 

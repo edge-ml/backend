@@ -14,6 +14,7 @@ const dbSchema = require("koa-mongoose-erd-generator");
 const deviceManager = require("./createDevices");
 const niclaDevice = require("./deviceSchemas/nicla").device;
 const bleNanoDeivce = require("./deviceSchemas/bleNano").device;
+const seeedDevice = require("./deviceSchemas/seeed").device;
 
 // create server
 const server = new Koa();
@@ -30,7 +31,8 @@ deviceManager
   .then(() => {
     Promise.all(
       [deviceManager.addDevice(niclaDevice)],
-      deviceManager.addDevice(bleNanoDeivce)
+      deviceManager.addDevice(bleNanoDeivce),
+      deviceManager.addDevice(seeedDevice)
     ).then(() => {
       console.log("Added devices");
     });
