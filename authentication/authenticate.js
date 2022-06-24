@@ -9,13 +9,15 @@ function verifyAccessToken(token) {
 
 module.exports = async (ctx, next) => {
 	const url = ctx.request.url.split('/');
+	console.log(url)
 	try {
 		if (
-			url[2].toLowerCase() === 'deviceapi'
-      && url[3].toLowerCase() !== 'deletekey'
-      && url[3].toLowerCase() !== 'switchactive'
-      && url[3].toLowerCase() !== 'getkey'
-      && url[3].toLowerCase() !== 'setkey'
+			(url[2].toLowerCase() === 'checkout' && url[3].toLowerCase() === 'webhook') || 
+			(url[2].toLowerCase() === 'deviceapi'
+			&& url[3].toLowerCase() !== 'deletekey'
+			&& url[3].toLowerCase() !== 'switchactive'
+			&& url[3].toLowerCase() !== 'getkey'
+			&& url[3].toLowerCase() !== 'setkey')
 		) {
 			return next();
 		}

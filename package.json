@@ -41,6 +41,7 @@
         "koa2-swagger-ui": "*",
         "mongoose": "^5.11.18",
         "request": "^2.88.2",
+        "stripe": "^9.8.0",
         "table": "^6.8.0",
         "yamljs": "^0.3.0"
     },

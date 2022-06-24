@@ -5,11 +5,13 @@ module.exports = async (ctx, next) => {
   try {
     const url = ctx.url.split("/");
     if (
-      url[2].toLowerCase() === "deviceapi" &&
+      (url[2].toLowerCase() === "checkout" &&
+      url[3].toLowerCase() === "webhook") ||
+      (url[2].toLowerCase() === "deviceapi" &&
       url[3].toLowerCase() !== "deletekey" &&
       url[3].toLowerCase() !== "switchactive" &&
       url[3].toLowerCase() !== "getkey" &&
-      url[3].toLowerCase() !== "setkey"
+      url[3].toLowerCase() !== "setkey")
     ) {
       return next();
     }
