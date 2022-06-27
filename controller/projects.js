@@ -117,6 +117,27 @@ async function deleteProjectById(ctx) {
   return ctx;
 }
 
+/*
+ * Lets a user leave a project they're is in (non-admin)
+ */
+async function leaveProjectById(ctx) {
+  try {
+    const { authId } = ctx.state;
+    await Project.findOneAndUpdate(
+      { $and: [{ _id: ctx.params.id }, { users: authId }] },
+      { $pull: { users: authId } },
+      { runValidators: true }
+    );
+    ctx.body = { message: `removed user` };
+    ctx.status = 200;
+  } catch (e) {
+    ctx.status = 400;
+    ctx.body = { error: e.errors.name.properties.message };
+  }
+
+  return ctx;
+}
+
 async function updateProjectById(ctx) {
   try {
     const { authId } = ctx.state;
@@ -187,6 +208,7 @@ async function getProjectSensorStreams(ctx) {
 module.exports = {
   getProjects,
   deleteProjectById,
+  leaveProjectById,
   createProject,
   updateProjectById,
   getProjectById,
