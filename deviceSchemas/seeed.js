@@ -1,18 +1,18 @@
 exports.device = {
     sensorTypeMap: {
-        "0": {
+        0: {
             "name": "ACC",
             "type": 0,
             "type-name": "xyz"
         },
 
-        "1": {
+        1: {
             "name": "GYRO",
             "type": 0,
             "type-name": "xyz"
         },
 
-        "2": {
+        2: {
             "name": "TEMP",
             "type": 1,
             "type-name": "xyz"
