@@ -30,7 +30,7 @@ module.exports = async (ctx, next) => {
 		userId = verifyAccessToken(token);
 	} catch (err) {
 		console.log(err);
-		ctx.status(401);
+		ctx.status = 401;
 		ctx.body = {
 			error: 'Unauthorized',
 		};
