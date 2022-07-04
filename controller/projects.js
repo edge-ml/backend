@@ -168,7 +168,7 @@ async function getProjectSensorStreams(ctx) {
   });
 
   const datasets = await Dataset.find({ _id: project.datasets })
-    .populate("timeSeries")
+    .populate("timeSeries", "name")
     .exec();
 
   ctx.body = {
