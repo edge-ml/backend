@@ -42,5 +42,5 @@ exports.device = {
                 }
             ]
     },
-    deviceInfo: { name: "Seeed-XIAO", generation: "1.0.0", maxSampleRate: 30 },
+    deviceInfo: { name: "SeeedXIAO", generation: "1.0.0", maxSampleRate: 30 },
 };
