@@ -62,6 +62,7 @@ async function getDatasetById(ctx) {
       $and: [{ _id: ctx.params.id }, { _id: project.datasets }],
     })
       .populate("timeSeries")
+      .lean()
       .exec();
   }
   if (dataset.length === 1) {
