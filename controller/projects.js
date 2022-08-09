@@ -4,8 +4,6 @@ const Dataset = require("../models/dataset").model;
 const axios = require("axios");
 const config = require("config");
 
-const userLimit = 5
-
 function filterProjectNonAdmin(ctx, project) {
   const { authId } = ctx.state;
   return authId === String(project.admin._id)
@@ -76,11 +74,6 @@ async function getProjects(ctx, next) {
 async function createProject(ctx) {
   try {
     const project = ctx.request.body;
-    if (project.users.length > userLimit) {
-      ctx.body = { error: `You cannot add more than ${userLimit} people to a single project` };
-      ctx.status = 400;
-      return ctx;
-    }
     // The admin is the one creating the project
     const { authId } = ctx.state;
     project.admin = authId;
@@ -149,13 +142,6 @@ async function updateProjectById(ctx) {
   try {
     const { authId } = ctx.state;
     const project = ctx.request.body;
-    
-    if (project.users.length > userLimit) {
-      ctx.body = { error: `You cannot add more than ${userLimit} people to a single project` };
-      ctx.status = 400;
-      return ctx;
-    }
-
     project.users = ctx.request.body.users.map((elm) =>
       typeof elm === "object" ? elm._id : elm
     );
