@@ -17,7 +17,7 @@ module.exports = async (ctx, next) => {
   try {
     if (
       ctx.url.split("/")[2] &&
-      ["projects", "users"].includes(ctx.url.split("/")[2].toLowerCase())
+      ["projects", "users", "arduinofirmware"].includes(ctx.url.split("/")[2].toLowerCase())
     ) {
       return next();
     }
