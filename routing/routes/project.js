@@ -17,6 +17,10 @@ router.del('/:id', async (ctx) => {
 	await controller.deleteProjectById(ctx);
 });
 
+router.get('/:id/leave', async (ctx) => {
+    await controller.leaveProjectById(ctx);
+});
+
 router.post('/', KoaBody(), async (ctx) => {
 	await controller.createProject(ctx);
 });

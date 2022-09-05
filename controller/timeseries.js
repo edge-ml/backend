@@ -16,7 +16,7 @@ async function appendData(ctx) {
       return ctx;
     }
 
-    var globalStart = undefined;
+    var globalStart = Infinity;
     var globalEnd = undefined;
 
     const timeSeries = ctx.request.body;
