@@ -80,7 +80,7 @@ async function getDatasetById(ctx) {
 /**
  * get dataset lock by id
  */
- async function getDatasetLockById(ctx) {
+async function getDatasetLockById(ctx) {
   const project = await ProjectModel.findOne({ _id: ctx.header.project });
   const lock = await Model.find({
     $and: [{ _id: ctx.params.id }, { _id: project.datasets }],
@@ -144,7 +144,11 @@ async function createDataset(ctx) {
     });
     document.timeSeries.push(newTimeSeries[i]._id);
   }
-  await TimeSeries.collection.insertMany(newTimeSeries);
+  if (newTimeSeries.length) {
+    await TimeSeries.collection.insertMany(newTimeSeries);
+
+  }
+
   await document.save();
 
   await ProjectModel.findByIdAndUpdate(ctx.header.project, {
