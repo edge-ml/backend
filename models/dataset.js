@@ -1,11 +1,12 @@
 const mongoose = require("mongoose");
 
-// import subdocumets
-const TimeSeries = require("./timeSeries").schema;
+// import subdocuments
+const TimeSeries = require("./timeSeries").model;
 const FusedSeries = require("./fusedSeries").schema;
 const LabelingObject = require("./datasetLabeling").schema;
 const Video = require("./video").schema;
 const Result = require("./result").schema;
+const BSON = require("bson");
 
 const Dataset = new mongoose.Schema({
 	userId: {
@@ -72,7 +73,20 @@ const Dataset = new mongoose.Schema({
 		type: Boolean,
 		default: true,
 	},
+	sizeInBytes: {
+		type: Number,
+		default: undefined
+	}
 });
+
+Dataset.pre('validate', async function (next) {
+	if (this.sizeInBytes === undefined && this.timeSeries && this.timeSeries.length > 0) {
+		const timeSeries = await TimeSeries.find({ _id: { $in: this.timeSeries } }).lean();
+		const size = BSON.calculateObjectSize(timeSeries) + BSON.calculateObjectSize(this);
+		this.set({ sizeInBytes: size });
+	}
+	next();
+})
 
 module.exports = {
 	model: mongoose.model("Dataset", Dataset),
