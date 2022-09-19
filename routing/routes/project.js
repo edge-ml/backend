@@ -33,4 +33,8 @@ router.get('/:id/sensorStreams', async (ctx) => {
     await controller.getProjectSensorStreams(ctx);
 });
 
+router.get('/:id/customMetaData', async (ctx) => {
+    await controller.getProjectCustomMetaData(ctx);
+});
+
 module.exports = router

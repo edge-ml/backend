@@ -4,8 +4,6 @@ const Dataset = require("../models/dataset").model;
 const axios = require("axios");
 const config = require("config");
 
-const userLimit = 5
-
 function filterProjectNonAdmin(ctx, project) {
   const { authId } = ctx.state;
   return authId === String(project.admin._id)
@@ -76,11 +74,7 @@ async function getProjects(ctx, next) {
 async function createProject(ctx) {
   try {
     const project = ctx.request.body;
-    if (project.users && project.users.length > userLimit) {
-      ctx.body = { error: `You cannot add more than ${userLimit} people to a single project` };
-      ctx.status = 400;
-      return ctx;
-    }
+    
     // The admin is the one creating the project
     const { authId } = ctx.state;
     project.admin = authId;
@@ -146,13 +140,6 @@ async function updateProjectById(ctx) {
   try {
     const { authId } = ctx.state;
     const project = ctx.request.body;
-    
-    if (project.users.length > userLimit) {
-      ctx.body = { error: `You cannot add more than ${userLimit} people to a single project` };
-      ctx.status = 400;
-      return ctx;
-    }
-
     project.users = ctx.request.body.users.map((elm) =>
       typeof elm === "object" ? elm._id : elm
     );
@@ -216,6 +203,39 @@ async function getProjectSensorStreams(ctx) {
   return ctx;
 }
 
+async function getProjectCustomMetaData(ctx) {
+  const { authId } = ctx.state;
+  const project = await Project.findOne({
+    $and: [
+      { _id: ctx.params.id },
+      { $or: [{ admin: authId }, { users: authId }] },
+    ],
+  });
+
+  const datasets = await Dataset.find({ _id: project.datasets }).exec();
+  
+  const keys = [...new Set(
+    datasets.map((dataset) => [...dataset.metaData.keys()]).flat()
+  )]
+
+  const freq = keys.reduce((acc, cur) => {
+    acc[cur] = 0
+    return acc;
+  }, {})
+  for (const { metaData: meta } of datasets) {
+    for (const [key, _] of meta.entries()) {
+      freq[key]++
+    }
+  }
+
+  ctx.body = {
+    metaDataKeys: keys,
+    metaDataKeyFrequency: freq,
+  };
+  ctx.status = 200;
+  return ctx;
+}
+
 module.exports = {
   getProjects,
   deleteProjectById,
@@ -224,4 +244,5 @@ module.exports = {
   updateProjectById,
   getProjectById,
   getProjectSensorStreams,
+  getProjectCustomMetaData,
 };
