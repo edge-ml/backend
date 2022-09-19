@@ -74,6 +74,13 @@ async function getProjects(ctx, next) {
 async function createProject(ctx) {
   try {
     const project = ctx.request.body;
+    
+    if (project.users && project.users.length > userLimit) {
+      ctx.body = { error: `You cannot add more than ${userLimit} people to a single project` };
+      ctx.status = 400;
+      return ctx;
+    }
+    
     // The admin is the one creating the project
     const { authId } = ctx.state;
     project.admin = authId;

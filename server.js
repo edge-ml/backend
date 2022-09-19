@@ -15,6 +15,7 @@ const deviceManager = require("./createDevices");
 const niclaDevice = require("./deviceSchemas/nicla").device;
 const bleNanoDeivce = require("./deviceSchemas/bleNano").device;
 const seeedDevice = require("./deviceSchemas/seeed").device;
+const openEarable = require("./deviceSchemas/openEarable").device;
 
 // create server
 const server = new Koa();
@@ -32,7 +33,8 @@ deviceManager
     Promise.all(
       [deviceManager.addDevice(niclaDevice)],
       deviceManager.addDevice(bleNanoDeivce),
-      deviceManager.addDevice(seeedDevice)
+      deviceManager.addDevice(seeedDevice),
+      deviceManager.addDevice(openEarable)
     ).then(() => {
       console.log("Added devices");
     });
