@@ -145,20 +145,10 @@ Project.pre(["findOneAndUpdate", "updateOne"], async function (next) {
 Project.post(["findOneAndUpdate", "updateOne"], async function () {
   const projectDoc = await this.model.findOne(this.getQuery());
   const datasets = await Dataset.find({ _id: { $in: projectDoc.datasets } });
-  const datasetsSize = datasets.reduce((total, dataset) => total + dataset.sizeInBytes, 0)
-  const experiments = BSON.calculateObjectSize(await Experiment.find({ _id: { $in: projectDoc.experiments } }));
-  const labelDefinitions = BSON.calculateObjectSize(await LabelDefinition.find({ _id: { $in: projectDoc.labelDefinitions } }));
-  const labelTypes = BSON.calculateObjectSize(await LabelType.find({ _id: { $in: projectDoc.labelTypes } }));
-  const devices = BSON.calculateObjectSize(await Device.find({ _id: { $in: projectDoc.devices } }));
-  const services = BSON.calculateObjectSize(await Service.find({ _id: { $in: projectDoc.services } }));
-  const sensors = BSON.calculateObjectSize(await Sensor.find({ _id: { $in: projectDoc.sensors } }));
-  const firmwares = BSON.calculateObjectSize(await Firmware.find({ _id: { $in: projectDoc.firmware } }));
-  const deviceApis = BSON.calculateObjectSize(await DeviceApi.find({ projectId: projectDoc._id }));
-  const size = datasetsSize + experiments + labelDefinitions + labelTypes + devices + services + sensors + firmwares + deviceApis;
+  const size = datasets.reduce((total, dataset) => total + dataset.sizeInBytes, 0)
   projectDoc.usedStorage = size;
   await projectDoc.save();
 })
-
 
 
 module.exports = {
