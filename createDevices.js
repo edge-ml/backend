@@ -43,7 +43,7 @@ const addDeviceToDataBase = async (device, sensorMap) => {
   return mongoose
     .connect(config.db, { useNewUrlParser: true })
     .then(() => {
-      return DeviceModel.findOneAndUpdate({ name: device.name }, device, {
+      return DeviceModel.findOneAndUpdate({ name: device.name, generation: device.generation }, device, {
         upsert: true,
         new: true,
       });
@@ -60,10 +60,15 @@ const addDeviceToDataBase = async (device, sensorMap) => {
           )
         )
       );
-    });
+    }).catch(err => {
+      console.log(err)
+    }) 
 };
 
 module.exports.addDevice = (device) => {
   const [deviceInfo, sensorMap] = preprocessDevice(device);
-  return addDeviceToDataBase(deviceInfo, sensorMap);
+  return Promise.all(deviceInfo.map(dev => {
+    console.log(dev)
+    return addDeviceToDataBase(dev, sensorMap);
+  }))
 };
