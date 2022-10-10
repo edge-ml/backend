@@ -74,6 +74,7 @@ async function getProjects(ctx, next) {
 async function createProject(ctx) {
   try {
     const project = ctx.request.body;
+    
     // The admin is the one creating the project
     const { authId } = ctx.state;
     project.admin = authId;
@@ -101,10 +102,7 @@ async function createProject(ctx) {
 async function deleteProjectById(ctx) {
   const { authId } = ctx.state;
   const project = await Project.findOne({
-    $and: [
-      { _id: ctx.params.id },
-      { $or: [{ admin: authId }, { users: authId }] },
-    ],
+    $and: [{ _id: ctx.params.id }, { admin: authId }],
   });
   if (project === undefined) {
     ctx.body = { message: "Cannot delete this project" };
