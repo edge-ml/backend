@@ -17,7 +17,10 @@ async function getDevices(ctx) {
 
 async function getDeviceByNameAndGeneration(ctx) {
   const { name, generation } = ctx.params;
-  const device = await Model.findOne({ name: name, generation: generation });
+  const mainGeneration = generation.split(".")[0];
+  console.log(mainGeneration)
+  var generationRegex = new RegExp("^" + mainGeneration);
+  const device = await Model.findOne({ name: name, generation: generationRegex });
   if (!device) {
     ctx.body = { error: "Not found" };
     ctx.status = 404;
