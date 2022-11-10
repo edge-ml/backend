@@ -1,7 +1,5 @@
 const mongoose = require("mongoose");
-const jest = require('jest');
 const supertest = require("supertest");
-const config = require("config");
 const chai = require("chai");
 const server = require("../server.js");
 const nock = require("nock");
@@ -9,9 +7,6 @@ const sinon = require("sinon");
 const { expect } = chai;
 const request = supertest(server);
 
-const email = "test@aura.com";
-const password = "testpw123";
-const userName = "CItestUser";
 
 const DatasetModel = require("../models/dataset").model;
 
@@ -35,7 +30,7 @@ let experiment;
 
 const device = {
   sensors: [],
-  generation: "1.0.0",
+  generation: 1,
   user: "",
   name: "deviceTestName",
   sensors: [],
@@ -61,26 +56,10 @@ const result = {
   value: 80,
   text: "Regressor3 is predicting some value according to the data in dataset",
 };
-const event = {
-  name: "TestEvent",
-  value: 3,
-  time: Date.now(),
-  unit: "kg",
-};
 const datasetLabelDefintion = {
   labelingId: "",
   labels: [],
 };
-const timeseries = {
-  name: "VOC",
-  unit: "kOhm",
-  start: "1561118400",
-  end: "1561766400",
-  samplingRate: "1",
-  data: [161, 202, 171, 196, 214, 234, 224],
-  offset: 10,
-};
-const fusedseries = {};
 const dataset = {
   isPublished: true,
   userId: "",
@@ -268,7 +247,7 @@ describe("Testing API Routes", () => {
         .post("/api/deviceApi/getProject")
         .send({ key: "nonsense" })
         .expect(403)
-        .end(async (err, res) => {
+        .end(async (err) => {
           done(err);
         });
     });
@@ -908,7 +887,6 @@ describe("Testing API Routes", () => {
     describe("Testing /datasets/{id}/labels...", () => {
       var generatedDataset;
       var generatedLabeling;
-      var generatedLabels;
       it("Add dataset", (done) => {
         request
           .post("/api/datasets")
@@ -1254,7 +1232,7 @@ describe("Testing API Routes", () => {
           .set({ Authorization: token, project: project._id })
           .send({ generation: 2 })
           .expect(200)
-          .end((err, res) => {
+          .end((err) => {
             done(err);
           });
       });
