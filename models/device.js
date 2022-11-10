@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const Device = new mongoose.Schema({
 	sensors: { type: [mongoose.Schema.Types.ObjectId], ref: 'Sensor' },
 	generation: {
-		type: String,
+		type: Number,
 		required: [true, 'generation cannot be empty'],
 	},
 	user: {

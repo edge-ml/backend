@@ -46,5 +46,5 @@ exports.device = {
       },
     ],
   },
-  deviceInfo: {name: "Earable", generation: "1.0.0", maxSampleRate: 30}
+  deviceInfo: {name: "Earable", generation: "1", maxSampleRate: 30}
 };
