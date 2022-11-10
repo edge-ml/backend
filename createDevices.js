@@ -43,7 +43,8 @@ const addDeviceToDataBase = async (device, sensorMap) => {
   return mongoose
     .connect(config.db, { useNewUrlParser: true })
     .then(() => {
-      return DeviceModel.findOneAndUpdate({ name: device.name }, device, {
+      const mainGeneration = String(device.generation).split(".")[0];
+      return DeviceModel.findOneAndUpdate({ name: device.name, generation: mainGeneration }, device, {
         upsert: true,
         new: true,
       });
