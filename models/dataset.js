@@ -6,6 +6,7 @@ const FusedSeries = require("./fusedSeries").schema;
 const LabelingObject = require("./datasetLabeling").schema;
 const Video = require("./video").schema;
 const Result = require("./result").schema;
+const MetaData = require("./metaData").schema;
 
 const Dataset = new mongoose.Schema({
 	userId: {
@@ -15,7 +16,7 @@ const Dataset = new mongoose.Schema({
 	},
 	metaData: {
 		type: Map,
-		of: String,
+		of: MetaData,
 		default: {}
 	},
 	name: {
