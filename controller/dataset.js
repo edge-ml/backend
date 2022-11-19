@@ -145,10 +145,12 @@ async function createDataset(ctx) {
     document.timeSeries.push(newTimeSeries[i]._id);
   }
   if (newTimeSeries.length) {
-    await TimeSeries.collection.insertMany(newTimeSeries);
-
+    try {
+      await TimeSeries.collection.insertMany(newTimeSeries);
+    } catch (e) {
+      console.log(e)
+    }
   }
-
   await document.save();
 
   await ProjectModel.findByIdAndUpdate(ctx.header.project, {
