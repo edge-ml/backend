@@ -22,11 +22,9 @@ const openEarable_v2 = require("./deviceSchemas/openEarable_v2").device;
 const server = new Koa();
 
 // connect to Mongo
-mongoose.connect(config.db, { useNewUrlParser: true });
+mongoose.connect(config.db);
 
-// suppress deprecation warnings
-mongoose.set("useFindAndModify", false);
-mongoose.set("useCreateIndex", true);
+
 
 deviceManager
   .clearDevices()
