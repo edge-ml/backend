@@ -43,8 +43,8 @@ async function getExperimentByIdPopulated(ctx) {
     ctx.body = { error: 'Experiment not in dataset' };
     ctx.status = 400;
   } else {
-    await experiment[0].populate('instructions.labelingId').execPopulate();
-    await experiment[0].populate('instructions.labelType').execPopulate();
+    await experiment[0].populate('instructions.labelingId');
+    await experiment[0].populate('instructions.labelType');
     ctx.body = experiment[0];
     ctx.status = 200;
   }

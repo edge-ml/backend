@@ -24,11 +24,9 @@ const Datasets = require("./models/dataset").model;
 const server = new Koa();
 
 // connect to Mongo
-mongoose.connect(config.db, { useNewUrlParser: true });
+mongoose.connect(config.db);
 
-// suppress deprecation warnings
-mongoose.set("useFindAndModify", false);
-mongoose.set("useCreateIndex", true);
+
 
 deviceManager
   .clearDevices()
