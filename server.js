@@ -18,6 +18,8 @@ const seeedDevice = require("./deviceSchemas/seeed").device;
 const openEarable = require("./deviceSchemas/openEarable").device;
 const openEarable_v2 = require("./deviceSchemas/openEarable_v2").device;
 
+const Datasets = require("./models/dataset").model;
+
 // create server
 const server = new Koa();
 
@@ -46,8 +48,14 @@ deviceManager
     process.exit();
   });
 
-// setup koa middlewares
-server.use(cors());
+// Update database
+Datasets.updateMany({ "metaData": { "$exists": false } }, {
+  metaData: {}
+}).then(elm => console.log("Updated metadata"))
+
+
+  // setup koa middlewares
+  server.use(cors());
 
 // Serve documentation
 server.use(
