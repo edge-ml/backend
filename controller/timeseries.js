@@ -86,7 +86,7 @@ async function getTimeSeriesMetaData(ctx) {
     return temp
   })
   ctx.status = 200;
-  ctx.body = res;
+  ctx.body = {...dataset.toObject(), timeSeries: res};
 }
 
 module.exports = {
