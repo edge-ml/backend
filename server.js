@@ -22,8 +22,7 @@ const openEarable_v2 = require("./deviceSchemas/openEarable_v2").device;
 const server = new Koa();
 
 // connect to Mongo
-mongoose.connect(config.db);
-
+mongoose.connect(config.db)
 
 
 deviceManager

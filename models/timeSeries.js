@@ -1,4 +1,8 @@
 const mongoose = require("mongoose");
+const gridFS = require('mongoose-gridfs');
+
+// let bucket;
+
 
 const TimeSeries = new mongoose.Schema({
   name: {
@@ -38,5 +42,7 @@ const TimeSeries = new mongoose.Schema({
 
 module.exports = {
   model: mongoose.model("TimeSeries", TimeSeries),
+  // bucket: bucket,
+  // FSModel: TimeSeriesModel,
   schema: TimeSeries,
 };

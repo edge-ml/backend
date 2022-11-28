@@ -6,7 +6,23 @@ const DatasetLabel = require("../models/datasetLabel").model;
 const ProjectModel = require("../models/project").model;
 const DeviceApi = require("../models/deviceApi").model;
 const TimeSeries = require("../models/timeSeries").model;
+// const TimeSeriesBucket = require("../models/timeSeries").bucket;
+const FSModel = require('../models/timeSeries').FSModel;
+const Readable = require('stream').Readable;
+const gridFS = require('mongoose-gridfs');
+const { pipeline } = require('stream/promises');
+
 const mongoose = require("mongoose");
+
+// let TimeSeriesModel;
+let bucket;
+
+mongoose.connection.once('open', () => {
+  // bucket = gridFS.createBucket({bucketName: 'TimeSeries'})
+  console.log('creating');
+  // TimeSeriesModel = gridFS.createModel({ modelName: 'TimeSeries' });
+  bucket = gridFS.createBucket();
+})
 
 
 /**
@@ -49,6 +65,36 @@ async function getDatasets(ctx) {
   ctx.status = 200;
 }
 
+function streamToJSON (stream) {
+  const chunks = [];
+  return new Promise((resolve, reject) => {
+    stream.on('data', (chunk) => chunks.push(Buffer.from(chunk)));
+    stream.on('error', (err) => reject(err));
+    stream.on('end', () => resolve(JSON.parse(Buffer.concat(chunks).toString())));
+  })
+}
+
+async function populateTimeSeries(dataset) {
+  const timeseriesPopulation = [];
+  const newDataset = []
+  for (const [i, ds] of dataset.entries()) {
+    timeseriesPopulation.push([]);
+    for (const ts of ds.timeSeries) {
+      const readStream = bucket.readFile({ _id: ts });
+      const data = await streamToJSON(readStream);
+      timeseriesPopulation[i].push(data);
+    }
+  }
+  for (let i = 0; i < dataset.length; i++) {
+    const newDs = JSON.parse(JSON.stringify(dataset[i]));
+    newDs.timeSeries = timeseriesPopulation[i]
+    newDataset.push(newDs)
+  }
+  console.log('updated')
+  console.log(newDataset)
+  return newDataset;
+}
+
 /**
  * get dataset by id
  */
@@ -60,13 +106,18 @@ async function getDatasetById(ctx) {
       $and: [{ _id: ctx.params.id }, { _id: project.datasets }],
     });
   } else {
+    console.log('jo')
     dataset = await Model.find({
       $and: [{ _id: ctx.params.id }, { _id: project.datasets }],
-    })
-      .populate("timeSeries")
-      .lean()
-      .exec();
+    }).exec();
   }
+
+  // populate timeseries manually using gridfs
+  
+  dataset = await populateTimeSeries(dataset);
+
+  console.log('printing dataset')
+  console.log(dataset)
   if (dataset.length === 1) {
     ctx.body = dataset[0];
     ctx.status = 200;
@@ -130,27 +181,27 @@ async function createDataset(ctx) {
   const document = new Model({ ...dataset, timeSeries: undefined });
   await document.save();
 
-  const newTimeSeries = [];
+  console.log(Buffer.byteLength(JSON.stringify(dataset.timeSeries)));
+
   for (var i = 0; i < dataset.timeSeries.length; i++) {
-    // ordering is important, first assign the default values, then override with values in timeseries[i]
-    newTimeSeries.push({
-      offset: 0,
-      start: 0,
-      end: 0,
-      unit: "",
-      ...dataset.timeSeries[i],
-      dataset: document._id,
-      _id: mongoose.Types.ObjectId(),
+    const _id = new mongoose.Types.ObjectId();
+    const readable = new Readable();
+    console.log('before upload')
+    dataset.timeSeries[i].offset = 0;
+    console.log(Object.keys(dataset.timeSeries[i]))
+    const buf = Buffer.from(JSON.stringify(dataset.timeSeries[i]));
+    readable.push(buf);
+    readable.push(null);
+    const filename = 'ts' + _id;
+    console.log('here')
+    bucket.writeFile({ filename, _id }, readable, (error, file) => {
+      console.log(file);
     });
-    document.timeSeries.push(newTimeSeries[i]._id);
+    // TimeSeriesBucket.writeFile({ filename }, readStream, (error, file) => { console.log('done') });
+    // const writeStream = TimeSeriesBucket.writeFile({ filename }, readStream);
+    document.timeSeries.push(_id);
   }
-  if (newTimeSeries.length) {
-    try {
-      await TimeSeries.collection.insertMany(newTimeSeries);
-    } catch (e) {
-      console.log(e)
-    }
-  }
+
   await document.save();
 
   await ProjectModel.findByIdAndUpdate(ctx.header.project, {
