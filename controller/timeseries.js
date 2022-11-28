@@ -79,8 +79,8 @@ async function getTimeSeriesMetaData(ctx) {
   }
   const timeSeries = await TimeSeriesModel.find({_id: dataset.timeSeries})
   const res = timeSeries.map(elm => {
-    console.log(elm.data.length)
     temp = Object.assign({}, elm.toObject())
+    temp.sampling_rate = elm.compSamplingRate
     temp.dataLen = elm.data.length;
     temp.data = undefined
     return temp

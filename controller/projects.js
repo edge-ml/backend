@@ -178,6 +178,7 @@ async function getProjectById(ctx) {
 }
 
 async function getProjectSensorStreams(ctx) {
+  try {
   const { authId } = ctx.state;
   const project = await Project.findOne({
     $and: [
@@ -187,20 +188,21 @@ async function getProjectSensorStreams(ctx) {
   });
 
   const datasets = await Dataset.find({ _id: project.datasets })
-    .populate("timeSeries", "name")
+    .populate("timeSeries")
     .exec();
 
+    const sensorStreams = datasets.map((dataset) => dataset.timeSeries.map((ts) => {
+      return {name: ts.name, samplingRate: ts.compSamplingRate}
+    }).filter(elm => !isNaN(elm.samplingRate))).filter(elm => elm.length)
+
   ctx.body = {
-    sensorStreams: [
-      ...new Set(
-        datasets
-          .map((dataset) => dataset.timeSeries.map((ts) => ts.name))
-          .flat(),
-      ),
-    ],
+    sensorStreams: sensorStreams,
   };
   ctx.status = 200;
   return ctx;
+} catch (error) {
+  console.log(error)
+}
 }
 
 async function getProjectCustomMetaData(ctx) {

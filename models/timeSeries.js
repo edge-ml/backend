@@ -36,22 +36,19 @@ const TimeSeries = new mongoose.Schema({
   samplingRate: Number,
 });
 
-TimeSeries.post("find", function (result) {
-  try {
-    result.forEach(ts => {
-      console.log("PRE")
-      const times = ts.data.map(elm => elm.timestamp)
-      const diffs = []
-      for (var i = 1; i < times.length; i++) {
-        diffs.push(times[i] - times[i - 1])
-      }
-      const average = diffs.reduce((a, b) => a + b, 0) / diffs.length;
-      const sampleRate = 1000 / average;
-      console.log(ts.name, ": ", sampleRate)
-    })
-  } catch (err) {
-    console.log(err)
+TimeSeries.virtual('compSamplingRate').get(function() {
+  if (this.samplingRate) {
+    return this.samplingRate
   }
+  const times = this.data.slice(0, 50).map(elm => elm.timestamp);
+  const diffs = []
+  for (var i = 1; i < times.length; i++) {
+    diffs.push(times[i] - times[i - 1])
+  }
+  const average = diffs.reduce((a, b) => a + b, 0) / diffs.length;
+  const samplingRate = 1000 / average;
+  return samplingRate;
+  
 })
 
 module.exports = {
