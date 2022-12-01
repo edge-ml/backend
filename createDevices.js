@@ -61,10 +61,12 @@ const addDeviceToDataBase = async (device, sensorMap) => {
           )
         )
       );
-    });
+    }).catch(err => {
+      console.log(err)
+    }) 
 };
 
 module.exports.addDevice = (device) => {
   const [deviceInfo, sensorMap] = preprocessDevice(device);
-  return addDeviceToDataBase(deviceInfo, sensorMap);
+  return addDeviceToDataBase(deviceInfo, sensorMap)
 };
