@@ -3,6 +3,7 @@ const Project = require("../models/project").model;
 const Dataset = require("../models/dataset").model;
 const axios = require("axios");
 const config = require("config");
+const datasetController = require('../controller/dataset')
 
 function filterProjectNonAdmin(ctx, project) {
   const { authId } = ctx.state;
@@ -186,17 +187,12 @@ async function getProjectSensorStreams(ctx) {
     ],
   });
 
-  const datasets = await Dataset.find({ _id: project.datasets })
-    .populate("timeSeries", "name")
-    .exec();
-
+  const datasets = await Dataset.find({ _id: project.datasets }).exec();
+  const names = await datasetController.populateTimeSeriesNames(datasets)
+  
   ctx.body = {
     sensorStreams: [
-      ...new Set(
-        datasets
-          .map((dataset) => dataset.timeSeries.map((ts) => ts.name))
-          .flat(),
-      ),
+      ...new Set(names),
     ],
   };
   ctx.status = 200;

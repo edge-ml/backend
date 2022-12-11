@@ -6,11 +6,9 @@ const DatasetLabel = require("../models/datasetLabel").model;
 const ProjectModel = require("../models/project").model;
 const DeviceApi = require("../models/deviceApi").model;
 const TimeSeries = require("../models/timeSeries").model;
-// const TimeSeriesBucket = require("../models/timeSeries").bucket;
 const FSModel = require('../models/timeSeries').FSModel;
 const Readable = require('stream').Readable;
 const gridFS = require('mongoose-gridfs');
-const { pipeline } = require('stream/promises');
 
 const mongoose = require("mongoose");
 
@@ -19,11 +17,19 @@ let bucket;
 
 mongoose.connection.once('open', () => {
   // bucket = gridFS.createBucket({bucketName: 'TimeSeries'})
-  console.log('creating');
+  // console.log('creating');
   // TimeSeriesModel = gridFS.createModel({ modelName: 'TimeSeries' });
   bucket = gridFS.createBucket();
 })
 
+
+function createTimeSeriesFilename(_id, name) {
+  return 'tsid:' + _id + '::' + 'name:' + name;
+}
+
+function extractNameFromFilename(name) {
+  return name.match(/name:(.*)(::|)/)[1];
+}
 
 /**
  * Util Function
@@ -90,9 +96,20 @@ async function populateTimeSeries(dataset) {
     newDs.timeSeries = timeseriesPopulation[i]
     newDataset.push(newDs)
   }
-  console.log('updated')
-  console.log(newDataset)
+  // console.log('updated')
+  // console.log(newDataset)
   return newDataset;
+}
+
+async function populateTimeSeriesNames(datasets) {
+  const timeseriesNames = []; // TODO: maybe use set here
+  for (const [i, ds] of datasets.entries()) {
+    for (const ts of ds.timeSeries) {
+      const file = await bucket.findById(ts);
+      timeseriesNames.push(extractNameFromFilename(file.filename)); 
+    }
+  }
+  return timeseriesNames;
 }
 
 /**
@@ -116,8 +133,6 @@ async function getDatasetById(ctx) {
   
   dataset = await populateTimeSeries(dataset);
 
-  console.log('printing dataset')
-  console.log(dataset)
   if (dataset.length === 1) {
     ctx.body = dataset[0];
     ctx.status = 200;
@@ -188,21 +203,19 @@ async function createDataset(ctx) {
     const readable = new Readable();
     console.log('before upload')
     dataset.timeSeries[i].offset = 0;
-    console.log(Object.keys(dataset.timeSeries[i]))
     const buf = Buffer.from(JSON.stringify(dataset.timeSeries[i]));
     readable.push(buf);
     readable.push(null);
-    const filename = 'ts' + _id;
-    console.log('here')
+    const filename = createTimeSeriesFilename(_id, dataset.timeSeries[i].name);
     bucket.writeFile({ filename, _id }, readable, (error, file) => {
-      console.log(file);
+      // console.log(file);
     });
     // TimeSeriesBucket.writeFile({ filename }, readStream, (error, file) => { console.log('done') });
     // const writeStream = TimeSeriesBucket.writeFile({ filename }, readStream);
     document.timeSeries.push(_id);
   }
 
-  await document.save();
+  const resultSave = await document.save();
 
   await ProjectModel.findByIdAndUpdate(ctx.header.project, {
     $push: { datasets: document._id },
@@ -303,4 +316,5 @@ module.exports = {
   updateDatasetById,
   canEditDatasetById,
   deleteDatasetById,
+  populateTimeSeriesNames,
 };
