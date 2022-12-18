@@ -31,6 +31,54 @@ function extractNameFromFilename(name) {
   return name.match(/name:(.*)(::|)/)[1];
 }
 
+async function processCSV(ctx) {
+  const files = ctx.request.files;
+  const timeData = [];
+  for (const file of files) {
+    const res = file.buffer.toString('utf-8');
+    const allTextLines = res.split(/\r\n|\n/);
+    if (allTextLines[allTextLines.length - 1] === '') {
+      allTextLines.pop();
+    }
+    const lines = [];
+    for (let i = 0; i < allTextLines.length; i++) {
+      const data = allTextLines[i].replace(/\s/g, '').split(',');
+      lines.push(data);
+    }
+    timeData.push(lines);
+    if (timeData.length === files.length) {
+      ctx.body = timeData;
+      ctx.status = 200;
+    }
+  }
+}
+
+async function generateDataset(ctx) {
+  // original method takes timeData and dataset as parameters
+  const timeData = ctx.request.body;
+  const headerErrors = checkHeaders(timeData);
+  if (headerErrors.some((elm) => elm.length > 0)) {
+    return headerErrors;
+  }
+  const datasets = [];
+  const labelings = [];
+  const errors = [];
+  for (var i = 0; i < timeData.length; i++) {
+    dataset = processCSVColumn(timeData[i]);
+    if (!Array.isArray(dataset)) {
+      datasets.push(dataset.dataset);
+      labelings.push(dataset.labeling);
+      errors.push([]);
+    } else {
+      errors.push(dataset);
+    }
+  }
+  if (errors.some((elm) => elm.length > 0)) {
+    return errors;
+  }
+  return { datasets: datasets, labelings: labelings };
+}
+
 /**
  * Util Function
  * Create labelings from experiment
@@ -71,7 +119,7 @@ async function getDatasets(ctx) {
   ctx.status = 200;
 }
 
-function streamToJSON (stream) {
+function streamToJSON(stream) {
   const chunks = [];
   return new Promise((resolve, reject) => {
     stream.on('data', (chunk) => chunks.push(Buffer.from(chunk)));
@@ -106,7 +154,7 @@ async function populateTimeSeriesNames(datasets) {
   for (const [i, ds] of datasets.entries()) {
     for (const ts of ds.timeSeries) {
       const file = await bucket.findById(ts);
-      timeseriesNames.push(extractNameFromFilename(file.filename)); 
+      timeseriesNames.push(extractNameFromFilename(file.filename));
     }
   }
   return timeseriesNames;
@@ -130,7 +178,7 @@ async function getDatasetById(ctx) {
   }
 
   // populate timeseries manually using gridfs
-  
+
   dataset = await populateTimeSeries(dataset);
 
   if (dataset.length === 1) {
@@ -317,4 +365,6 @@ module.exports = {
   canEditDatasetById,
   deleteDatasetById,
   populateTimeSeriesNames,
+  processCSV,
+  generateDataset
 };

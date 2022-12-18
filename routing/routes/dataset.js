@@ -1,5 +1,7 @@
 const Router      = require('koa-router');
-const KoaBody      = require('koa-body');
+const KoaBody     = require('koa-body');
+const multer      = require('@koa/multer');
+const upload      = multer();
 
 const controller = require('../../controller/dataset');
 
@@ -29,6 +31,26 @@ router.get('/', async (ctx, next) => {
 });
 
 /**
+ * processes CSV files uploaded by user
+ * route:					/datasets
+ * method type: 	POST
+ */
+// keep field name consistent with the frontend
+router.post('/processCSV', upload.array('CSVFile'), async (ctx) => {
+	await controller.processCSV(ctx);
+})
+
+/**
+ * create a new dataset
+ * route:					/datasets
+ * method type: 	POST
+ */
+router.post('/generateDataset', KoaBody({jsonLimit: '350mb'}), async (ctx) => {
+	console.log('backend generate arrival')
+	await controller.generateDataset(ctx)
+})
+
+/**
  * get dataset by id for current user
  * route:					/datasets/:id
  * method type: 	GET
@@ -51,7 +73,7 @@ router.get('/:id', async (ctx) => {
  * route:					/datasets
  * method type: 	POST
  */
-router.post('/', KoaBody({jsonLimit: '150mb'}), async (ctx) => {
+router.post('/', KoaBody({jsonLimit: '350mb'}), async (ctx) => {
 	await controller.createDataset(ctx);
 });
 
