@@ -45,7 +45,7 @@ router.post('/processCSV', upload.array('CSVFile'), async (ctx) => {
  * route:					/datasets
  * method type: 	POST
  */
-router.post('/generateDataset', KoaBody({jsonLimit: '350mb'}), async (ctx) => {
+router.post('/generateDataset', KoaBody({jsonLimit: '1500mb'}), async (ctx) => {
 	console.log('backend generate arrival')
 	await controller.generateDataset(ctx)
 })
@@ -73,7 +73,7 @@ router.get('/:id', async (ctx) => {
  * route:					/datasets
  * method type: 	POST
  */
-router.post('/', KoaBody({jsonLimit: '350mb'}), async (ctx) => {
+router.post('/', KoaBody({jsonLimit: '1500mb'}), async (ctx) => {
 	await controller.createDataset(ctx);
 });
 
@@ -82,7 +82,7 @@ router.post('/', KoaBody({jsonLimit: '350mb'}), async (ctx) => {
  * route:					/datasets/:id
  * method type: 	PUT
  */
-router.put('/:id', KoaBody({jsonLimit: '50mb'}), async (ctx) => {
+router.put('/:id', KoaBody({jsonLimit: '1500mb'}), async (ctx) => {
 	await controller.updateDatasetById(ctx);
 });
 
