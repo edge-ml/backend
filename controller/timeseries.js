@@ -1,6 +1,7 @@
 const DatasetModel = require('../models/dataset').model;
 const ProjectModel = require('../models/project').model;
 const TimeSeriesModel = require('../models/timeSeries').model;
+const { preview, window } = require('../utils/timeseriesService');
 
 async function appendData(ctx) {
 	try {
@@ -87,13 +88,16 @@ async function getDatasetTimeseriesById(ctx) {
 	}
 
 	// INFO: there is currently a timeseries migration to gridfs? ongoing,
-	// therefore we simply filter in js here, since we'll most probably redo
+	// therefore we simply filter (window) in js here, since we'll most probably redo
 	// it later.
-	const timeseries = dataset.timeSeries;
+	const allTimeseries = dataset.timeSeries;
 
-	console.log('timeseries!');
+	const windowAllTimeseries = window(
+		dataset, allTimeseries, ctx.request.query.start, ctx.request.query.end
+	);
+	const downsampled = preview(windowAllTimeseries, ctx.request.query.max_resolution);
 
-	ctx.body = timeseries;
+	ctx.body = downsampled;
 	ctx.status = 200;
 	return ctx.body;
 }

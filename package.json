@@ -24,6 +24,7 @@
         "cli-table": "^0.3.11",
         "config": "^1.30.0",
         "dotenv": "^10.0.0",
+        "downsample": "^1.4.0",
         "eslint_d": "^6.0.1",
         "hat": "*",
         "jsonwebtoken": "^8.5.1",
