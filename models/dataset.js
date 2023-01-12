@@ -11,7 +11,12 @@ const Dataset = new mongoose.Schema({
 	userId: {
 		type: mongoose.Schema.Types.ObjectId,
 		ref: "User",
-		required: [true, "object needs to be associated with user"],
+		required: [true, "Dataset needs to be associated with user"],
+	},
+	projectId: {
+		type: mongoose.Schema.Types.ObjectId,
+		ref: "Project",
+		required: [true, "Datasets needs to be associated with a project"]
 	},
 	metaData: {
 		type: Map,
@@ -22,51 +27,14 @@ const Dataset = new mongoose.Schema({
 		type: String,
 		required: [true, "Dataset needs a name"]
 	},
-	start: {
-		type: Number,
-		required: [true, "please enter a start time"],
-	},
-	end: {
-		type: Number,
-		required: [true, "please enter an end time"],
-	},
-	isPublished: {
-		type: Boolean,
-		default: false,
-	},
-	timeSeries: [{
-		type: mongoose.Schema.Types.ObjectId,
-		ref: "TimeSeries",
-		default: [],
-	}],
-	fusedSeries: {
-		type: [FusedSeries],
-		ref: "FusedSeries",
-		default: [],
+	timeSeries: {
+		type: [mongoose.Schema.Types.ObjectId],
+		default: []
 	},
 	labelings: {
 		type: [LabelingObject],
 		ref: "DatasetLabeling",
 		default: [],
-	},
-	video: {
-		type: Video,
-		ref: "Video"
-	},
-	device: {
-		type: mongoose.Schema.Types.ObjectId,
-		ref: "Device",
-		default: null,
-	},
-	results: {
-		type: [Result],
-		ref: "Result",
-		default: [],
-	},
-	experiments: {
-		type: mongoose.Schema.Types.ObjectId,
-		ref: "Experiment",
-		default: null,
 	},
 	canEdit: {
 		type: Boolean,
