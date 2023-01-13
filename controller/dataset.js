@@ -59,11 +59,16 @@ async function processCSV(ctx) {
       lines.push(data);
     }
     timeData.push(lines);
-    if (timeData.length === files.length) {
-      ctx.body = timeData;
-      ctx.status = 200;
-    }
   }
+  const { errors, datasets, labelings } = await generateDataset(timeData);
+  if (errors) {
+    ctx.status = 400;
+    ctx.body = errors;
+    return;
+  }
+  ctx.status = 200;
+  ctx.body = {datasets: datasets, labelings: labelings};
+  return;
 }
 
 function checkHeaders(timeData) {
@@ -234,9 +239,7 @@ function processCSVColumn(timeData) {
   }
 }
 
-async function generateDataset(ctx) {
-  // original method takes timeData and dataset as parameters
-  const timeData = ctx.request.body;
+async function generateDataset(timeData) {
   console.log(timeData);
   const headerErrors = checkHeaders(timeData);
   if (headerErrors.some((elm) => elm.length > 0)) {
@@ -261,16 +264,14 @@ async function generateDataset(ctx) {
       errors.push(dataset);
     }
   }
-  console.log(errors);
+  const returnBody = {errors: undefined, datasets: undefined, labelings: undefined};
   if (errors.some((elm) => elm.length > 0)) {
-    ctx.body = errors;
-    console.log(errors)
-    ctx.status = 418;
-    return;
+    returnBody.errors = errors;
+    return returnBody; 
   }
-  console.log('returning from generate dataset');
-  ctx.body = { datasets: datasets, labelings: labelings };
-  ctx.status = 200;
+  returnBody.datasets = datasets;
+  returnBody.labelings = labelings;
+  return returnBody;
 }
 
 /**
