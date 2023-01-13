@@ -38,7 +38,7 @@ async function getDatasetById(ctx) {
     dataset = await Model.find({
       $and: [{ _id: ctx.params.id }, { _id: project.datasets }],
     })
-      .populate("timeSeries")
+      .populate("timeSeries", "-data") // don't send actual data with metadata anymore
       .lean()
       .exec();
   }
