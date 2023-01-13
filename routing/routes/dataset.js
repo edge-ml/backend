@@ -46,14 +46,14 @@ router.get('/:id', async (ctx) => {
 	await controller.getDatasetLockById(ctx);
 });
 
-/**
- * create a new dataset
- * route:					/datasets
- * method type: 	POST
- */
-router.post('/', KoaBody({jsonLimit: '1500mb'}), async (ctx) => {
-	await controller.createDataset(ctx);
-});
+// /**
+//  * create a new dataset
+//  * route:					/datasets
+//  * method type: 	POST
+//  */
+// router.post('/', KoaBody({jsonLimit: '1500mb'}), async (ctx) => {
+// 	await controller.createDataset(ctx);
+// });
 
 /**
  * update a specific datasets

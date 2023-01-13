@@ -166,64 +166,62 @@ async function getDatasetLockById(ctx) {
 /**
  * create a new dataset
  */
-async function createDataset(ctx) {
-  const dataset = ctx.request.body;
-  dataset.projectId = ctx.header.project;
-  // if userId empty, set it to requesting user
-  if (!dataset.userId) {
-    const { authId } = ctx.state;
-    const user = await UserModel.findOne({ authId });
-    dataset.userId = user._id;
-  }
+async function createDataset(dataset) {
+  console.timeEnd('copy')
+	console.time('createLabelings')
+	if (
+		"experiments" in dataset &&
+		dataset.experiments !== null &&
+		!("labelings" in dataset)
+	) {
+		dataset.labelings = await autoCreateLabelings(dataset);
+	} else if (
+		"experiments" in dataset &&
+		dataset.experiments !== null &&
+		"labelings" in dataset &&
+		dataset.labelings.length > 0
+	) {
+		ctx.body = { error: "Do not set experiment and labelings" };
+		ctx.status = 400;
+		return ctx;
+	}
+	console.timeEnd('createLabelings')
+	console.time('createModel');
+	const docId = new mongoose.Types.ObjectId();
+	const document = { ...dataset, timeSeries: [], _id: docId};
+	console.timeEnd('createModel');
+	// console.log(Buffer.byteLength(JSON.stringify(dataset.timeSeries)));
 
-  if (
-    "experiments" in dataset &&
-    dataset.experiments !== null &&
-    !("labelings" in dataset)
-  ) {
-    dataset.labelings = await autoCreateLabelings(dataset);
-  } else if (
-    "experiments" in dataset &&
-    dataset.experiments !== null &&
-    "labelings" in dataset &&
-    dataset.labelings.length > 0
-  ) {
-    ctx.body = { error: "Do not set experiment and labelings" };
-    ctx.status = 400;
-    return ctx;
-  }
-
-  const document = new Model({ ...dataset, timeSeries: undefined });
-  await document.save();
-
-  // console.log(Buffer.byteLength(JSON.stringify(dataset.timeSeries)));
-
-  for (var i = 0; i < dataset.timeSeries.length; i++) {
-    const _id = new mongoose.Types.ObjectId();
-    const readable = new Readable();
-    // console.log('before upload')
-    dataset.timeSeries[i].offset = 0;
-    const buf = Buffer.from(JSON.stringify(dataset.timeSeries[i]));
-    readable.push(buf);
-    readable.push(null);
-    const filename = createTimeSeriesFilename(_id, dataset.timeSeries[i].name);
-    bucket.writeFile({ filename, _id }, readable, (error, file) => {
-      // console.log(file);
-    });
-    // TimeSeriesBucket.writeFile({ filename }, readStream, (error, file) => { console.log('done') });
-    // const writeStream = TimeSeriesBucket.writeFile({ filename }, readStream);
-    document.timeSeries.push(_id);
-  }
-
-  const resultSave = await document.save();
-
-  await ProjectModel.findByIdAndUpdate(ctx.header.project, {
-    $push: { datasets: document._id },
-  });
-
-  ctx.body = document;
-  ctx.status = 201;
-  return ctx;
+	console.time('gridFS')
+	for (var i = 0; i < dataset.timeSeries.length; i++) {
+		const _id = new mongoose.Types.ObjectId();
+		const readable = new Readable();
+		// console.log('before upload')
+		dataset.timeSeries[i].offset = 0;
+		const buf = Buffer.from(JSON.stringify(dataset.timeSeries[i]));
+		readable.push(buf);
+		readable.push(null);
+		const filename = createTimeSeriesFilename(_id, dataset.timeSeries[i].name);
+		// console.log('bucket exists?')
+		// console.log(bucket)
+		bucket.writeFile({ filename, _id }, readable);
+		// TimeSeriesBucket.writeFile({ filename }, readStream, (error, file) => { console.log('done') });
+		// const writeStream = TimeSeriesBucket.writeFile({ filename }, readStream);
+		document.timeSeries.push(_id);
+	}
+	console.timeEnd('gridFS')
+	console.time('saveDocument')
+	console.log(document)
+	// const resultSave = await document.save();
+	Model.collection.insertOne(document);
+	console.timeEnd('saveDocument')
+	console.time('ProjectModelUpdate')
+	ProjectModel.collection.updateOne(
+		{ _id: mongoose.Types.ObjectId(dataset.projectId) },
+		{ $push: { datasets: docId }}
+	);
+	console.timeEnd('ProjectModelUpdate')
+	console.timeEnd('upload')
 }
 
 async function updateDatasetById(ctx) {

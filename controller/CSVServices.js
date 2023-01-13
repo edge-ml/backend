@@ -1,4 +1,7 @@
 /* eslint-disable */
+const Model = require("../models/dataset").model;
+const UserModel = require("../models/user").model;
+const createDataset = require('./dataset').createDataset;
 
 function isNumber(val) {
 	return /^-?[\d.]+(?:e-?\d+)?$/.test(val);
@@ -167,8 +170,6 @@ function processCSVColumn(timeData) {
 				.flat(1);
 			resultingLabelings.push(labelingToAppend);
 		});
-		console.log("process column result");
-		console.log(timeSeries[0].data);
 		const result = {
 			start: timeSeries[0].start,
 			end: parseInt(timeData[timeData.length - 1][0], 10),
@@ -207,8 +208,8 @@ async function generateDataset(timeData) {
 			errors.push(dataset);
 		}
 	}
-	console.log("here");
-	console.log(errors);
+	// console.log("here");
+	// console.log(errors);
 	const returnBody = {
 		errors: undefined,
 		datasets: undefined,
@@ -224,6 +225,7 @@ async function generateDataset(timeData) {
 }
 
 async function processCSV(ctx) {
+	console.time('process CSV')
 	const { files } = ctx.request;
 	const timeData = [];
 	for (const file of files) {
@@ -239,15 +241,52 @@ async function processCSV(ctx) {
 		}
 		timeData.push(lines);
 	}
+	console.timeEnd('process CSV')
+	console.time('generateDataset')
 	const { errors, datasets, labelings } = await generateDataset(timeData);
+	console.timeEnd('generateDataset')
+	console.time('upload')
 	if (errors) {
 		ctx.status = 400;
 		ctx.body = errors;
 		return;
 	}
+
+	console.time('copy')
+	const dataset = {
+		name: 'hardcoded name',
+		labelings: [],
+		start: datasets[0].start,
+		end: datasets[0].end,
+		timeSeries: datasets[0].timeSeries,
+	}
+	dataset.projectId = ctx.header.project;
+	// if userId empty, set it to requesting user
+	if (!dataset.userId) {
+		const { authId } = ctx.state;
+		const user = await UserModel.findOne({ authId });
+		dataset.userId = user._id;
+	}
+	try {
+		createDataset(dataset);
+	} catch (e) {
+		console.log(e);
+		ctx.status = 400;
+		ctx.body = e;
+	}
 	ctx.status = 200;
-	ctx.body = { datasets: datasets, labelings: labelings };
-	return;
+	ctx.body = { datasets: [{
+		start: datasets[0].start,
+		end: datasets[0].end,
+		timeSeries: datasets[0].timeSeries.map(e => ({
+			name: e.name,
+			unit: e.unit,
+			start: e.start,
+			end: e.end,
+			offset: e.offset,
+		}))
+	}], labelings: labelings };
+	return ctx;
 }
 
 module.exports = {
