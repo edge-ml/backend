@@ -142,10 +142,12 @@ async function createDataset(ctx) {
       start: 0,
       end: 0,
       unit: "",
-      levels: [
+      levels: [{
+        resolution: data.length,
+        lastUpdated: Date.now(),
         // first (and only) mip level to be stored on ingest
-        await createSegmentsFromTimeseriesData(data)
-      ],
+        segments: await createSegmentsFromTimeseriesData(data)
+      }],
       ...timeSeriesExceptData,
       dataset: document._id,
       _id: mongoose.Types.ObjectId(),

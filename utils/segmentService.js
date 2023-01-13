@@ -40,6 +40,10 @@ const chunkToBuffer = chunk => Buffer.from(JSON.stringify(
 const bufferToChunk = buffer => JSON.parse(buffer.toString())
 	.map(([timestamp, datapoint]) => ({ timestamp, datapoint }));
 
+// takes a predicate mapping { timestamp, datapoint }-based predicates to chunk mapping
+// we still use above format in the front, so not needed now
+const chunkFilterPredicateFactory = predicate => predicate;
+
 const createSegmentsFromTimeseriesData = async (data, {
 	segmentSize = DEFAULT_SOFT_SEGMENT_SIZE
 } = {}) => {
@@ -68,6 +72,72 @@ const createSegmentsFromTimeseriesData = async (data, {
 	return segments.sort(startCompare);
 };
 
+const readSegment = async segment => bufferToChunk(await gridFSToBuffer(segment.segmentId));
+const readSegments = async segments => (await Promise.all(segments.map(readSegment))).flat();
+
+const binarySearch = (array, targetCmpFn) => {
+	let left = 0;
+	let right = array.length - 1;
+
+	while (left <= right) {
+		const middle = Math.floor((left + right) / 2);
+
+		if (targetCmpFn(array[middle]) === 0) { return middle; }
+
+		if (targetCmpFn(array[middle]) < 0) { // target < middle
+			right = middle - 1;
+		} else {
+			left = middle + 1;
+		}
+	}
+
+	throw new Error('no segment was found with the target');
+};
+
+const targetCmpFnFactory = (target, targetField) => (seg) => {
+	if (seg.start <= target && target <= seg.end) {
+		return 0;
+	}
+
+	return target - seg[targetField];
+};
+
+const findSegmentedRange = (segments, start, end) => {
+	const startSegmentIdx = binarySearch(segments, targetCmpFnFactory(start, 'start'));
+	const endSegmentIdx = binarySearch(segments, targetCmpFnFactory(end, 'end'));
+
+	return segments.slice(startSegmentIdx, endSegmentIdx + 1);
+};
+
+const findRange = async (segments, start, end) => {
+	const selected = await Promise.all(
+		findSegmentedRange(segments, start, end)
+			.map(readSegment)
+	);
+
+	if (selected.length === 0) {
+		// no segments in range
+		return [];
+	}
+
+	if (selected.length === 1) {
+		// single segment contains both start and end
+		return selected[0]
+			.filter(chunkFilterPredicateFactory(a => start <= a.timestamp && a.timestamp <= end));
+	}
+
+	const fi = selected[0]
+		.filter(chunkFilterPredicateFactory(a => start <= a.timestamp));
+	const la = selected[selected.length - 1]
+		.filter(chunkFilterPredicateFactory(a => a.timestamp <= end));
+	const rest = selected.slice(1, -1);
+
+	return [fi, ...rest, la].flat();
+};
+
 module.exports = {
 	createSegmentsFromTimeseriesData,
+	findRange,
+	readSegment,
+	readSegments,
 };

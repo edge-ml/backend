@@ -1,9 +1,9 @@
 const DatasetModel = require('../models/dataset').model;
 const ProjectModel = require('../models/project').model;
 const TimeSeriesModel = require('../models/timeSeries').model;
-const { preview, window } = require('../utils/timeseriesService');
+const { resample, window } = require('../utils/timeseriesService');
 
-async function appendData(ctx) {
+async function appendData(ctx) { // TODO FIXME
 	try {
 		const project = await ProjectModel.findOne({ _id: ctx.header.project });
 		const dataset = await DatasetModel.findOne({
@@ -78,7 +78,7 @@ async function getDatasetTimeseriesById(ctx) {
 		$and: [{ _id: ctx.params.datasetId }, { _id: project.datasets }],
 	})
 		.lean()
-		.populate('timeSeries', 'data')
+		.populate('timeSeries', 'levels')
 		.exec();
 
 	if (!project || !dataset) {
@@ -87,17 +87,32 @@ async function getDatasetTimeseriesById(ctx) {
 		return ctx;
 	}
 
-	// INFO: there is currently a timeseries migration to gridfs? ongoing,
-	// therefore we simply filter (window) in js here, since we'll most probably redo
-	// it later.
 	const allTimeseries = dataset.timeSeries;
+	const allTimeSeriesIds = allTimeseries.map(sts => sts._id);
+	const allTimeSeriesLevels = allTimeseries.map(sts => sts.levels);
 
-	const windowAllTimeseries = window(
-		dataset, allTimeseries, ctx.request.query.start, ctx.request.query.end
+	// let allTimeSeriesLeveledSegments;
+	// if (ctx.request.query.max_resolution == null) {
+	// 	allTimeSeriesLeveledSegments = allTimeSeriesLevels[0].segment;
+	// }
+	// const resolution = parseInt(ctx.request.query.max_resolution, 10);
+
+	// allTimeSeriesLeveledSegments = allTimeSeriesLevels.map((levels) => {
+	// 	for (const level of levels) {
+	// 		if (level.resolution <= resolution) {
+	// 			return timeserie.segment;
+	// 		}
+
+	// 	}
+	// 	// no need to downsample as the data is smaller tha our target
+
+	// 	return { _id: timeserie._id, data: lttb(timeserie.data, resolution) };
+	// });
+	const windowAllTimeseries = await window(
+		dataset, allTimeSeriesLeveledSegments, ctx.request.query.start, ctx.request.query.end
 	);
-	const downsampled = preview(windowAllTimeseries, ctx.request.query.max_resolution);
 
-	ctx.body = downsampled;
+	ctx.body = windowAllTimeseries.map((ls, i) => ({ data: ls, _id: allTimeSeriesIds[i] }));
 	ctx.status = 200;
 	return ctx.body;
 }

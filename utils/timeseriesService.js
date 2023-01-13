@@ -1,4 +1,5 @@
 const downsample = require('downsample');
+const { findRange, readSegments } = require('./segmentService');
 
 const DATAPOINT_CONFIG = {
 	x: p => p.timestamp,
@@ -24,13 +25,10 @@ const preview = (allTimeseries, resolutionString) => {
 	});
 };
 
-// this method is slow, but we don't have any windowing operation
-// from the underlying layer (mongodb, or gridfs), so it is the best we
-// can do without (pre)caching.
-const window = (dataset, allTimeseries, startString = null, endString = null) => {
+const window = (dataset, allTimeseriesSegments, startString = null, endString = null) => {
 	// no window at all
 	if (startString == null && endString == null) {
-		return allTimeseries;
+		return Promise.all(allTimeseriesSegments.map(readSegments));
 	}
 	let start = parseInt(startString, 10);
 	let end = parseInt(endString, 10);
@@ -40,14 +38,11 @@ const window = (dataset, allTimeseries, startString = null, endString = null) =>
 
 	// dataset fully within our desired window
 	if (start <= dataset.start && dataset.end <= end) {
-		return allTimeseries;
+		return Promise.all(allTimeseriesSegments.map(readSegments));
 	}
 
 	// filter in datapoints within desired window
-	const filter = p => start <= p.timestamp && p.timestamp <= end;
-	return allTimeseries.map(timeserie => ({
-		_id: timeserie._id, data: timeserie.data.filter(filter)
-	}));
+	return Promise.all(allTimeseriesSegments.map(segments => findRange(segments, start, end)));
 };
 
 module.exports = {
