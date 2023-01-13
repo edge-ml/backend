@@ -123,10 +123,7 @@ function extractTimeSeries(timeData, i) {
         error: `Sensor value is not a number in row ${j + 1}, column ${i + 1}`,
       };
     }
-    timeSeries.data.push({
-      timestamp: parseInt(timeData[j][0], 10),
-      datapoint: parseFloat(timeData[j][i]),
-    });
+    timeSeries.data.push([parseInt(timeData[j][0], 10), parseFloat(timeData[j][i])]);
   }
   return timeSeries;
 }
@@ -225,7 +222,8 @@ function processCSVColumn(timeData) {
         .flat(1);
       resultingLabelings.push(labelingToAppend);
     });
-
+    console.log('process column result')
+    console.log(timeSeries[0].data);
     const result = {
       start: timeSeries[0].start,
       end: parseInt(timeData[timeData.length - 1][0], 10),
@@ -240,7 +238,7 @@ function processCSVColumn(timeData) {
 }
 
 async function generateDataset(timeData) {
-  console.log(timeData);
+  // console.log(timeData);
   const headerErrors = checkHeaders(timeData);
   if (headerErrors.some((elm) => elm.length > 0)) {
     ctx.body = headerErrors;
@@ -252,15 +250,15 @@ async function generateDataset(timeData) {
   const errors = [];
   for (var i = 0; i < timeData.length; i++) {
     const dataset = processCSVColumn(timeData[i]);
-    console.log('processed dataset')
-    console.log(dataset)
+    // console.log('processed dataset')
+    // console.log(dataset)
     if (!Array.isArray(dataset)) {
       datasets.push(dataset.dataset);
       labelings.push(dataset.labeling);
       errors.push([]);
-      console.log('error found in if')
+      // console.log('error found in if')
     } else {
-      console.log('error found in else')
+      // console.log('error found in else')
       errors.push(dataset);
     }
   }
@@ -366,7 +364,7 @@ async function getDatasetById(ctx) {
       $and: [{ _id: ctx.params.id }, { _id: project.datasets }],
     });
   } else {
-    console.log('jo')
+    // console.log('jo')
     dataset = await Model.find({
       $and: [{ _id: ctx.params.id }, { _id: project.datasets }],
     }).exec();
@@ -439,12 +437,12 @@ async function createDataset(ctx) {
   const document = new Model({ ...dataset, timeSeries: undefined });
   await document.save();
 
-  console.log(Buffer.byteLength(JSON.stringify(dataset.timeSeries)));
+  // console.log(Buffer.byteLength(JSON.stringify(dataset.timeSeries)));
 
   for (var i = 0; i < dataset.timeSeries.length; i++) {
     const _id = new mongoose.Types.ObjectId();
     const readable = new Readable();
-    console.log('before upload')
+    // console.log('before upload')
     dataset.timeSeries[i].offset = 0;
     const buf = Buffer.from(JSON.stringify(dataset.timeSeries[i]));
     readable.push(buf);
