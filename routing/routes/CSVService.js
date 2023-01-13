@@ -13,7 +13,7 @@ const router = new Router();
  * method type: 	POST
  */
 // keep field name consistent with the frontend
-router.post('/processCSV', upload.array('CSVFile'), async (ctx) => {
+router.post('/processCSV', upload.single('CSVFile'), async (ctx) => {
 	await controller.processCSV(ctx);
 });
 

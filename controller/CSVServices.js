@@ -226,21 +226,23 @@ async function generateDataset(timeData) {
 
 async function processCSV(ctx) {
 	console.time('process CSV')
-	const { files } = ctx.request;
+	console.log('print files')
+	const { file } = ctx.request;
+	console.log(file);
 	const timeData = [];
-	for (const file of files) {
-		const res = file.buffer.toString("utf-8");
-		const allTextLines = res.split(/\r\n|\n/);
-		if (allTextLines[allTextLines.length - 1] === "") {
-			allTextLines.pop();
-		}
-		const lines = [];
-		for (let i = 0; i < allTextLines.length; i++) {
-			const data = allTextLines[i].replace(/\s/g, "").split(",");
-			lines.push(data);
-		}
-		timeData.push(lines);
+	
+	const res = file.buffer.toString("utf-8");
+	const allTextLines = res.split(/\r\n|\n/);
+	if (allTextLines[allTextLines.length - 1] === "") {
+		allTextLines.pop();
 	}
+	const lines = [];
+	for (let i = 0; i < allTextLines.length; i++) {
+		const data = allTextLines[i].replace(/\s/g, "").split(",");
+		lines.push(data);
+	}
+	timeData.push(lines);
+
 	console.timeEnd('process CSV')
 	console.time('generateDataset')
 	const { errors, datasets, labelings } = await generateDataset(timeData);
