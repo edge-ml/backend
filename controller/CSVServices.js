@@ -226,7 +226,6 @@ async function generateDataset(timeData) {
 
 async function processCSV(ctx) {
 	console.time('process CSV')
-	console.log('print files')
 	const { file } = ctx.request;
 	console.log(file);
 	const timeData = [];
@@ -253,10 +252,13 @@ async function processCSV(ctx) {
 		ctx.body = errors;
 		return;
 	}
-
+	
 	console.time('copy')
+	const fileName = file.originalname;
 	const dataset = {
-		name: 'hardcoded name',
+		name: fileName.endsWith('.csv')
+			? fileName.substring(0, fileName.length - 4)
+			: fileName,
 		labelings: [],
 		start: datasets[0].start,
 		end: datasets[0].end,
