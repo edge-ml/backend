@@ -8,6 +8,7 @@ const DeviceApi = require("../models/deviceApi").model;
 const TimeSeries = require("../models/timeSeries").model;
 const mongoose = require("mongoose");
 
+const { createSegmentsFromTimeseriesData } = require('../utils/segmentService');
 
 /**
  * Util Function
@@ -63,7 +64,7 @@ async function getDatasetById(ctx) {
     dataset = await Model.find({
       $and: [{ _id: ctx.params.id }, { _id: project.datasets }],
     })
-      .populate("timeSeries", "-data") // don't send actual data with metadata anymore
+      .populate("timeSeries", "-levels")
       .lean()
       .exec();
   }
@@ -132,24 +133,31 @@ async function createDataset(ctx) {
 
   const newTimeSeries = [];
   for (var i = 0; i < dataset.timeSeries.length; i++) {
+    // we pass everything other than `data` key, no changes in teh create dataset signature for comp. reasons
+    const { data = [], ...timeSeriesExceptData } = dataset.timeSeries[i]
+    
     // ordering is important, first assign the default values, then override with values in timeseries[i]
-    newTimeSeries.push({
+    const newTimeSerie = {
       offset: 0,
       start: 0,
       end: 0,
       unit: "",
-      ...dataset.timeSeries[i],
+      levels: [
+        // first (and only) mip level to be stored on ingest
+        await createSegmentsFromTimeseriesData(data)
+      ],
+      ...timeSeriesExceptData,
       dataset: document._id,
       _id: mongoose.Types.ObjectId(),
-    });
+    }
+
+    newTimeSeries.push(newTimeSerie);
+
     document.timeSeries.push(newTimeSeries[i]._id);
   }
+
   if (newTimeSeries.length) {
-    try {
-      await TimeSeries.collection.insertMany(newTimeSeries);
-    } catch (e) {
-      console.log(e)
-    }
+    await TimeSeries.collection.insertMany(newTimeSeries);
   }
   await document.save();
 
@@ -171,12 +179,13 @@ async function updateDatasetById(ctx) {
       if (dataset.timeSeries) {
         timeSeries = await Promise.all(
           dataset.timeSeries.map((elm) => {
-            if (elm._id) {
-              return TimeSeries.findByIdAndUpdate(elm._id, elm);
-            } else {
-              elm.dataset = ctx.params.id;
-              return TimeSeries.create(elm);
-            }
+            throw new Error("Not Implemented"); // TODO FIXME
+            // if (elm._id) {
+            //   return TimeSeries.findByIdAndUpdate(elm._id, elm);
+            // } else {
+            //   elm.dataset = ctx.params.id;
+            //   return TimeSeries.create(elm);
+            // }
           })
         );
         dataset.timeSeries = timeSeries.map((elm) => elm._id);
