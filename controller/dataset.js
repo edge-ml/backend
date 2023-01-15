@@ -6,6 +6,8 @@ const DatasetLabel = require("../models/datasetLabel").model;
 const ProjectModel = require("../models/project").model;
 const DeviceApi = require("../models/deviceApi").model;
 const TimeSeries = require("../models/timeSeries").model;
+const mongoose = require("mongoose");
+
 
 /**
  * Util Function
@@ -62,6 +64,7 @@ async function getDatasetById(ctx) {
       $and: [{ _id: ctx.params.id }, { _id: project.datasets }],
     })
       .populate("timeSeries")
+      .lean()
       .exec();
   }
   if (dataset.length === 1) {
@@ -77,7 +80,7 @@ async function getDatasetById(ctx) {
 /**
  * get dataset lock by id
  */
- async function getDatasetLockById(ctx) {
+async function getDatasetLockById(ctx) {
   const project = await ProjectModel.findOne({ _id: ctx.header.project });
   const lock = await Model.find({
     $and: [{ _id: ctx.params.id }, { _id: project.datasets }],
@@ -129,13 +132,23 @@ async function createDataset(ctx) {
 
   const newTimeSeries = [];
   for (var i = 0; i < dataset.timeSeries.length; i++) {
-    var tmpSeries = new TimeSeries({
+    // ordering is important, first assign the default values, then override with values in timeseries[i]
+    newTimeSeries.push({
+      offset: 0,
+      start: 0,
+      end: 0,
+      unit: "",
       ...dataset.timeSeries[i],
       dataset: document._id,
+      _id: mongoose.Types.ObjectId(),
     });
-    await tmpSeries.save();
-    document.timeSeries.push(tmpSeries._id);
+    document.timeSeries.push(newTimeSeries[i]._id);
   }
+  if (newTimeSeries.length) {
+    await TimeSeries.collection.insertMany(newTimeSeries);
+
+  }
+
   await document.save();
 
   await ProjectModel.findByIdAndUpdate(ctx.header.project, {

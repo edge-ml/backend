@@ -17,6 +17,10 @@ router.del('/:id', async (ctx) => {
 	await controller.deleteProjectById(ctx);
 });
 
+router.get('/:id/leave', async (ctx) => {
+    await controller.leaveProjectById(ctx);
+});
+
 router.post('/', KoaBody(), async (ctx) => {
 	await controller.createProject(ctx);
 });
@@ -27,6 +31,10 @@ router.put('/:id', KoaBody(), async (ctx) => {
 
 router.get('/:id/sensorStreams', async (ctx) => {
     await controller.getProjectSensorStreams(ctx);
+});
+
+router.get('/:id/customMetaData', async (ctx) => {
+    await controller.getProjectCustomMetaData(ctx);
 });
 
 module.exports = router

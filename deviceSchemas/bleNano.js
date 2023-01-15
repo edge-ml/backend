@@ -95,5 +95,5 @@ exports.device = {
       },
     ],
   },
-  deviceInfo: [{ name: "NANO", generation: "1.0.0", maxSampleRate: 30 }],
+  deviceInfo: { name: "NANO", generation: 1, maxSampleRate: 30 },
 };

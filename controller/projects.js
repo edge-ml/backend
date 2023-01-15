@@ -74,6 +74,7 @@ async function getProjects(ctx, next) {
 async function createProject(ctx) {
   try {
     const project = ctx.request.body;
+    
     // The admin is the one creating the project
     const { authId } = ctx.state;
     project.admin = authId;
@@ -101,10 +102,7 @@ async function createProject(ctx) {
 async function deleteProjectById(ctx) {
   const { authId } = ctx.state;
   const project = await Project.findOne({
-    $and: [
-      { _id: ctx.params.id },
-      { $or: [{ admin: authId }, { users: authId }] },
-    ],
+    $and: [{ _id: ctx.params.id }, { admin: authId }],
   });
   if (project === undefined) {
     ctx.body = { message: "Cannot delete this project" };
@@ -114,6 +112,27 @@ async function deleteProjectById(ctx) {
   await project.remove();
   ctx.body = { message: `deleted project with id: ${ctx.params.id}` };
   ctx.status = 200;
+  return ctx;
+}
+
+/*
+ * Lets a user leave a project they're is in (non-admin)
+ */
+async function leaveProjectById(ctx) {
+  try {
+    const { authId } = ctx.state;
+    await Project.findOneAndUpdate(
+      { $and: [{ _id: ctx.params.id }, { users: authId }] },
+      { $pull: { users: authId } },
+      { runValidators: true }
+    );
+    ctx.body = { message: `removed user` };
+    ctx.status = 200;
+  } catch (e) {
+    ctx.status = 400;
+    ctx.body = { error: e.errors.name.properties.message };
+  }
+
   return ctx;
 }
 
@@ -184,11 +203,46 @@ async function getProjectSensorStreams(ctx) {
   return ctx;
 }
 
+async function getProjectCustomMetaData(ctx) {
+  const { authId } = ctx.state;
+  const project = await Project.findOne({
+    $and: [
+      { _id: ctx.params.id },
+      { $or: [{ admin: authId }, { users: authId }] },
+    ],
+  });
+
+  const datasets = await Dataset.find({ _id: project.datasets }).exec();
+  
+  const keys = [...new Set(
+    datasets.map((dataset) => [...dataset.metaData.keys()]).flat()
+  )]
+
+  const freq = keys.reduce((acc, cur) => {
+    acc[cur] = 0
+    return acc;
+  }, {})
+  for (const { metaData: meta } of datasets) {
+    for (const [key, _] of meta.entries()) {
+      freq[key]++
+    }
+  }
+
+  ctx.body = {
+    metaDataKeys: keys,
+    metaDataKeyFrequency: freq,
+  };
+  ctx.status = 200;
+  return ctx;
+}
+
 module.exports = {
   getProjects,
   deleteProjectById,
+  leaveProjectById,
   createProject,
   updateProjectById,
   getProjectById,
   getProjectSensorStreams,
+  getProjectCustomMetaData,
 };
