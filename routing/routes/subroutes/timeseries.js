@@ -10,7 +10,9 @@ router.post('/append', KoaBody(), async (ctx) => {
 });
 
 router.get('/', KoaBody(), async (ctx) => {
-	await controller.getDatasetTimeseriesById(ctx);
+	console.time('getDatasetTimeseriesByIdRoute ' + JSON.stringify(ctx.query))
+	await controller.getDatasetTimeseriesById(ctx).catch(console.error);
+	console.timeEnd('getDatasetTimeseriesByIdRoute ' + JSON.stringify(ctx.query))
 });
 
 module.exports = router;

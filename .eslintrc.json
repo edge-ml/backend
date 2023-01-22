@@ -5,13 +5,14 @@
 		"es6": true
 	},
 	"parserOptions": {
-		"ecmaVersion": 2017,
+		"ecmaVersion": 2019,
 		"sourceType": "module"
 	},
 	"plugins": [
 		"node"
 	],
 	"rules": {
+		"max-len": 0,
 		"global-require": 0,
 		"no-restricted-syntax": [0, "ForOfStatement"],
 		"space-before-blocks": [0, "never"],

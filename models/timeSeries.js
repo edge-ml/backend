@@ -15,6 +15,7 @@ const TimeSeries = new mongoose.Schema({
 	},
 	levels: [{
 		size: {type: Number, required: [true, 'size must be specified']},
+		resolution: {type: Number, required: [true, 'size must be specified']},
 		lastUpdated: { type: Number, default: 0 },
 		segments: [{
 			start: { type: Number, default: 0 },

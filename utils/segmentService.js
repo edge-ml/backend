@@ -5,7 +5,8 @@ const { Readable } = require('stream');
 
 let bucket;
 
-const DEFAULT_SOFT_SEGMENT_SIZE = 100;
+const DEFAULT_SOFT_SEGMENT_SIZE = 10000;
+const SYNC_CHECKPOINT_EVERY_N_DATAPOINT = 1;
 
 mongoose.connection.once('open', () => {
 	bucket = gridFS.createBucket();
@@ -50,6 +51,7 @@ const createSegmentsFromTimeseriesData = async (data, {
 	const segments = [];
 	const promises = [];
 
+	let nextSync = SYNC_CHECKPOINT_EVERY_N_DATAPOINT;
 	for (let i = 0; i < data.length; i += segmentSize) {
 		const chunk = data.slice(i, i + segmentSize);
 
@@ -57,6 +59,13 @@ const createSegmentsFromTimeseriesData = async (data, {
 		const sortedChunk = chunk.sort(timestampCompare);
 
 		const _id = new mongoose.Types.ObjectId();
+
+		if (i > nextSync) {
+			// sync every so often so that we don't cause a surge on the memory
+			// console.log('sync', i)
+			nextSync = i + SYNC_CHECKPOINT_EVERY_N_DATAPOINT;
+			await Promise.all(promises);
+		}
 
 		promises.push(bufferToGridFS(chunkToBuffer(sortedChunk), _id).then(() => {
 			segments.push({

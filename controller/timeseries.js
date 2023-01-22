@@ -1,7 +1,18 @@
+const downsample = require('downsample');
+
 const DatasetModel = require('../models/dataset').model;
 const ProjectModel = require('../models/project').model;
 const TimeSeriesModel = require('../models/timeSeries').model;
-const { resample, window } = require('../utils/timeseriesService');
+
+const { findRange, readSegments, createSegmentsFromTimeseriesData } = require('../utils/segmentService');
+
+const DATAPOINT_CONFIG = {
+	x: p => p.timestamp,
+	y: p => p.datapoint,
+	toPoint: (x, y) => ({ timestamp: x, datapoint: y })
+};
+
+const lttb = downsample.createLTTB(DATAPOINT_CONFIG);
 
 async function appendData(ctx) { // TODO FIXME
 	try {
@@ -78,7 +89,7 @@ async function getDatasetTimeseriesById(ctx) {
 		$and: [{ _id: ctx.params.datasetId }, { _id: project.datasets }],
 	})
 		.lean()
-		.populate('timeSeries', 'levels')
+		.populate('timeSeries', 'levels start end')
 		.exec();
 
 	if (!project || !dataset) {
@@ -87,32 +98,79 @@ async function getDatasetTimeseriesById(ctx) {
 		return ctx;
 	}
 
-	const allTimeseries = dataset.timeSeries;
-	const allTimeSeriesIds = allTimeseries.map(sts => sts._id);
-	const allTimeSeriesLevels = allTimeseries.map(sts => sts.levels);
+	const start = ctx.request.query.start ? parseInt(ctx.request.query.start, 10) : dataset.start;
+	const end = ctx.request.query.end ? parseInt(ctx.request.query.end, 10) : dataset.end;
+	const maxResolution = ctx.request.query.max_resolution
+		? parseInt(ctx.request.query.max_resolution, 10) : null;
 
-	// let allTimeSeriesLeveledSegments;
-	// if (ctx.request.query.max_resolution == null) {
-	// 	allTimeSeriesLeveledSegments = allTimeSeriesLevels[0].segment;
-	// }
-	// const resolution = parseInt(ctx.request.query.max_resolution, 10);
+	let allTimeseries = dataset.timeSeries;
 
-	// allTimeSeriesLeveledSegments = allTimeSeriesLevels.map((levels) => {
-	// 	for (const level of levels) {
-	// 		if (level.resolution <= resolution) {
-	// 			return timeserie.segment;
-	// 		}
+	// mipmapping
+	if (!maxResolution) {
+		allTimeseries = allTimeseries.map(ts => ({ ...ts, levels: ts.levels[0].segments }));
+	} else {
+		const factor = (dataset.end - dataset.start) / (end - start); // scale resolution by window size
+		const targetRes = factor * parseInt(ctx.request.query.max_resolution, 10);
 
-	// 	}
-	// 	// no need to downsample as the data is smaller tha our target
+		allTimeseries = await Promise.all(allTimeseries.map(async (ts) => {
+			if (targetRes >= ts.levels[0].resolution) {
+				return { ...ts, levels: ts.levels[0].segments };
+			}
 
-	// 	return { _id: timeserie._id, data: lttb(timeserie.data, resolution) };
-	// });
-	const windowAllTimeseries = await window(
-		dataset, allTimeSeriesLeveledSegments, ctx.request.query.start, ctx.request.query.end
-	);
+			let originalDataTemp = null;
+			const originalUpdateTime = ts.levels[0].lastUpdated;
 
-	ctx.body = windowAllTimeseries.map((ls, i) => ({ data: ls, _id: allTimeSeriesIds[i] }));
+			let res = ts.levels[0].resolution;
+			let index = 0;
+			let currLevel = null;
+			while (res > targetRes) {
+				currLevel = ts.levels[index];
+
+				if (!currLevel || currLevel.lastUpdated < originalUpdateTime) {
+					// level either doesn't exist or is outdated, create anew
+					console.assert(index > 0, 'BUG: trying to create original level');
+
+					// read original data, since it's cached disable await warning below
+					// eslint-disable-next-line no-await-in-loop
+					originalDataTemp = originalDataTemp || await readSegments(ts.levels[0].segments);
+
+					currLevel = {
+						resolution: res,
+						lastUpdated: Date.now(),
+						// suppress, we may want to do this in parallel
+						// but imo it would slow gridfs unnecessarily
+						// eslint-disable-next-line no-await-in-loop
+						segments: await createSegmentsFromTimeseriesData(lttb(originalDataTemp, res))
+					};
+
+					// eslint-disable-next-line no-await-in-loop
+					await TimeSeriesModel.findOneAndUpdate(
+						{ _id: ts._id },
+						{ $set: { [`levels.${index}`]: currLevel } },
+						{ new: true }
+					);
+				}
+
+				res = Math.floor(res / 2);
+				index++;
+			}
+
+			console.assert(index >= 0 && currLevel, `BUG: invalid mip map (${index}) returned for target resolution ${targetRes}, timeseries id: ${ts._id}`);
+
+			return { ...ts, levels: currLevel.segments };
+		}));
+	}
+
+	// range
+	if (start <= dataset.start && dataset.end <= end) {
+		// dataset fully within our desired window
+		allTimeseries = await Promise.all(allTimeseries.map(async ts => ({ ...ts, levels: await readSegments(ts.levels) })));
+	} else {
+		// filter in datapoints within desired window
+		allTimeseries = await Promise.all(allTimeseries.map(async ts => ({ ...ts, levels: await findRange(ts.levels, start, end) })));
+	}
+
+	ctx.body = allTimeseries.map(({ levels, ...ts }) => ({ ...ts, data: levels }));
 	ctx.status = 200;
 	return ctx.body;
 }
