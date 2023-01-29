@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const { deleteSegment } = require('../utils/segmentService');
+
 
 const TimeSeries = new mongoose.Schema({
 	name: {
@@ -35,12 +37,21 @@ const TimeSeries = new mongoose.Schema({
 	samplingRate: Number,
 });
 
-TimeSeries.pre('deleteMany', () => {
+TimeSeries.pre('deleteMany', async function (next) {
 	// remove gridfs segments related to the timeseries here
-	throw new Error('Not Implemented'); // TODO FIXME
+	const query = this.getQuery()
+	const timeSeries = (await model.find(query).select('levels')).map((ts) => ts.levels);
+	const segmentIds = timeSeries.flatMap(ts => ts.flatMap(level => level.segments.map(s => s.segmentId)));
+	for (const _id of segmentIds) {
+		deleteSegment(_id);
+	}
+	next();
 });
 
+
+const model = mongoose.model('TimeSeries', TimeSeries);
+
 module.exports = {
-	model: mongoose.model('TimeSeries', TimeSeries),
+	model: model,
 	schema: TimeSeries,
 };
