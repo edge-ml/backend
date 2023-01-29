@@ -279,7 +279,7 @@ async function processCSV(ctx) {
 		ctx.body = e;
 	}
 	ctx.status = 200;
-	ctx.body = { datasets: [{
+	ctx.body = { 
 		start: datasets[0].start,
 		end: datasets[0].end,
 		timeSeries: datasets[0].timeSeries.map(e => ({
@@ -288,8 +288,9 @@ async function processCSV(ctx) {
 			start: e.start,
 			end: e.end,
 			offset: e.offset,
-		}))
-	}], labelings: labelings };
+		})), 
+		labelings: labelings[0]
+	};
 	return ctx;
 }
 
