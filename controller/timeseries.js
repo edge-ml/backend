@@ -6,6 +6,10 @@ const TimeSeriesModel = require('../models/timeSeries').model;
 
 const { findRange, readSegments, createSegmentsFromTimeseriesData } = require('../utils/segmentService');
 
+const ENABLE_MIPMAPPING = true;
+const ENABLE_POST_WINDOW_DOWNSAMPLE = true;
+const MIP_STEP = 4;
+
 const DATAPOINT_CONFIG = {
 	x: p => p.timestamp,
 	y: p => p.datapoint,
@@ -84,6 +88,7 @@ async function appendData(ctx) { // TODO FIXME
  * get dataset timeseries by dataset id
  */
 async function getDatasetTimeseriesById(ctx) {
+	console.time('getDatasetTimeseriesById-firstpart')
 	const project = await ProjectModel.findOne({ _id: ctx.header.project });
 	const dataset = await DatasetModel.findOne({
 		$and: [{ _id: ctx.params.datasetId }, { _id: project.datasets }],
@@ -105,12 +110,12 @@ async function getDatasetTimeseriesById(ctx) {
 
 	let allTimeseries = dataset.timeSeries;
 
-	// mipmapping
-	if (!maxResolution) {
+	if (!maxResolution || !ENABLE_MIPMAPPING) {
 		allTimeseries = allTimeseries.map(ts => ({ ...ts, levels: ts.levels[0].segments }));
 	} else {
+		// mipmapping
 		const factor = (dataset.end - dataset.start) / (end - start); // scale resolution by window size
-		const targetRes = factor * parseInt(ctx.request.query.max_resolution, 10);
+		const targetRes = factor * maxResolution;
 
 		allTimeseries = await Promise.all(allTimeseries.map(async (ts) => {
 			if (targetRes >= ts.levels[0].resolution) {
@@ -135,7 +140,7 @@ async function getDatasetTimeseriesById(ctx) {
 					originalDataTemp = originalDataTemp || await readSegments(ts.levels[0].segments);
 
 					currLevel = {
-						resolution: res,
+						resolution: Math.floor(res / MIP_STEP),
 						lastUpdated: Date.now(),
 						// suppress, we may want to do this in parallel
 						// but imo it would slow gridfs unnecessarily
@@ -151,7 +156,7 @@ async function getDatasetTimeseriesById(ctx) {
 					);
 				}
 
-				res = Math.floor(res / 2);
+				res = currLevel.resolution;
 				index++;
 			}
 
@@ -161,6 +166,9 @@ async function getDatasetTimeseriesById(ctx) {
 		}));
 	}
 
+	console.timeEnd('getDatasetTimeseriesById-firstpart')
+	console.time('getDatasetTimeseriesById-readSegments')
+
 	// range
 	if (start <= dataset.start && dataset.end <= end) {
 		// dataset fully within our desired window
@@ -169,6 +177,15 @@ async function getDatasetTimeseriesById(ctx) {
 		// filter in datapoints within desired window
 		allTimeseries = await Promise.all(allTimeseries.map(async ts => ({ ...ts, levels: await findRange(ts.levels, start, end) })));
 	}
+
+	console.timeEnd('getDatasetTimeseriesById-readSegments')
+	console.time('getDatasetTimeseriesById-downsample')
+
+	if (maxResolution && ENABLE_POST_WINDOW_DOWNSAMPLE) {
+		allTimeseries = allTimeseries.map(({ levels, ...ts }) => ({ ...ts, levels: lttb(levels, maxResolution) }));
+	}
+
+	console.timeEnd('getDatasetTimeseriesById-downsample')
 
 	ctx.body = allTimeseries.map(({ levels, ...ts }) => ({ ...ts, data: levels }));
 	ctx.status = 200;

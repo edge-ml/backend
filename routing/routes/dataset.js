@@ -52,6 +52,7 @@ router.get('/:id', async (ctx) => {
  * method type: 	POST
  */
 router.post('/', KoaBody({jsonLimit: '500mb'}), async (ctx) => {
+	console.log('received request')
 	console.time('createDatasetRoute');
 	await controller.createDataset(ctx).catch(console.error);
 	console.timeEnd('createDatasetRoute');

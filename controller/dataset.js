@@ -184,16 +184,12 @@ async function updateDatasetById(ctx) {
 			if (dataset.timeSeries) {
 				timeSeries = await Promise.all(
 					dataset.timeSeries.map((elm) => {
-						throw new Error('Not Implemented'); // TODO FIXME
-						// if (elm._id) {
-						//   return TimeSeries.findByIdAndUpdate(elm._id, elm);
-						// } else {
-						//   elm.dataset = ctx.params.id;
-						//   return TimeSeries.create(elm);
-						// }
+						if (elm._id) {
+						  return TimeSeries.findByIdAndUpdate(elm._id, elm);
+						}
 					})
 				);
-				dataset.timeSeries = timeSeries.map(elm => elm._id);
+				dataset.timeSeries = timeSeries.map(elm => elm._id).filter(x => x);
 			}
 			await Model.findByIdAndUpdate(ctx.params.id, dataset);
 			ctx.body = { message: `updated dataset with id: ${ctx.params.id}` };
