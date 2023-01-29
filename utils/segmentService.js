@@ -48,6 +48,15 @@ const chunkToBuffer = chunk => Buffer.from(JSON.stringify(
 const bufferToChunk = buffer => JSON.parse(buffer.toString())
 	.map(([timestamp, datapoint]) => ({ timestamp, datapoint }));
 
+const deleteSegment = (_id) => new Promise((resolve, reject) => {
+	bucket.deleteFile(_id, (err, res) => {
+		if (err) {
+			reject(err);
+		}
+		resolve(res);
+	});
+});
+
 // takes a predicate mapping { timestamp, datapoint }-based predicates to chunk mapping
 // we still use above format in the front, so not needed now
 const chunkFilterPredicateFactory = predicate => predicate;
@@ -171,4 +180,6 @@ module.exports = {
 	readSegment,
 	readSegments,
 	findSegment,
+	deleteGridFSFile,
+	deleteSegment,
 };
