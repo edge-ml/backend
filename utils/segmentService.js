@@ -15,6 +15,13 @@ mongoose.connection.once('open', () => {
 const timestampCompare = (a, b) => a.timestamp - b.timestamp;
 const startCompare = (a, b) => a.start - b.start;
 
+const deleteGridFSFile = async _id => new Promise((res, rej) => {
+	bucket.deleteFile(_id, (err, results) => {
+		if (err) rej(err);
+		res(results);
+	});
+});
+
 const bufferToGridFS = (buffer, _id) => new Promise((resolve, reject) => {
 	const readable = new Readable();
 	readable.push(buffer);
@@ -45,38 +52,42 @@ const bufferToChunk = buffer => JSON.parse(buffer.toString())
 // we still use above format in the front, so not needed now
 const chunkFilterPredicateFactory = predicate => predicate;
 
+const createSingleSegment = async (chunk) => {
+	// const sortedChunk = timsort.sort(chunk, timestampCompare);
+	const sortedChunk = chunk.sort(timestampCompare);
+
+	const _id = new mongoose.Types.ObjectId();
+
+	await bufferToGridFS(chunkToBuffer(sortedChunk), _id);
+
+	return {
+		start: sortedChunk[0].timestamp,
+		end: sortedChunk[sortedChunk.length - 1].timestamp,
+		count: sortedChunk.length,
+		segmentId: _id,
+	};
+};
+
 const createSegmentsFromTimeseriesData = async (data, {
 	segmentSize = DEFAULT_SOFT_SEGMENT_SIZE
 } = {}) => {
-	const segments = [];
-	const promises = [];
+	let segments = [];
 
 	let nextSync = SYNC_CHECKPOINT_EVERY_N_DATAPOINT;
 	for (let i = 0; i < data.length; i += segmentSize) {
 		const chunk = data.slice(i, i + segmentSize);
 
-		// const sortedChunk = timsort.sort(chunk, timestampCompare);
-		const sortedChunk = chunk.sort(timestampCompare);
-
-		const _id = new mongoose.Types.ObjectId();
-
 		if (i > nextSync) {
 			// sync every so often so that we don't cause a surge on the memory
 			// console.log('sync', i)
 			nextSync = i + SYNC_CHECKPOINT_EVERY_N_DATAPOINT;
-			await Promise.all(promises);
+			await Promise.all(segments);
 		}
 
-		promises.push(bufferToGridFS(chunkToBuffer(sortedChunk), _id).then(() => {
-			segments.push({
-				start: sortedChunk[0].timestamp,
-				end: sortedChunk[sortedChunk.length - 1].timestamp,
-				segmentId: _id,
-			});
-		}));
+		segments.push(createSingleSegment(chunk));
 	}
 
-	await Promise.all(promises);
+	segments = await Promise.all(segments);
 
 	return segments.sort(startCompare);
 };
@@ -84,6 +95,7 @@ const createSegmentsFromTimeseriesData = async (data, {
 const readSegment = async segment => bufferToChunk(await gridFSToBuffer(segment.segmentId));
 const readSegments = async segments => (await Promise.all(segments.map(readSegment))).flat();
 
+// return: [target segment (-1 if none), prevsegment (-1 if none), nextsegment (array.len if none)]
 const binarySearch = (array, targetCmpFn) => {
 	let left = 0;
 	let right = array.length - 1;
@@ -91,7 +103,7 @@ const binarySearch = (array, targetCmpFn) => {
 	while (left <= right) {
 		const middle = Math.floor((left + right) / 2);
 
-		if (targetCmpFn(array[middle]) === 0) { return middle; }
+		if (targetCmpFn(array[middle]) === 0) { return [middle, middle - 1, middle + 1]; }
 
 		if (targetCmpFn(array[middle]) < 0) { // target < middle
 			right = middle - 1;
@@ -100,7 +112,8 @@ const binarySearch = (array, targetCmpFn) => {
 		}
 	}
 
-	throw new Error('no segment was found with the target');
+	// right and left swapped places, prev is now right, next is left, and the target is (must be,) in between
+	return [-1, right, left];
 };
 
 const targetCmpFnFactory = (target, targetField) => (seg) => {
@@ -111,11 +124,19 @@ const targetCmpFnFactory = (target, targetField) => (seg) => {
 	return target - seg[targetField];
 };
 
-const findSegmentedRange = (segments, start, end) => {
-	const startSegmentIdx = binarySearch(segments, targetCmpFnFactory(start, 'start'));
-	const endSegmentIdx = binarySearch(segments, targetCmpFnFactory(end, 'end'));
+const findSegment = (segments, timestamp) => {
+	const [target, prev, next] = binarySearch(segments, targetCmpFnFactory(timestamp, 'start'));
+	return { target, prev, next };
+};
 
-	return segments.slice(startSegmentIdx, endSegmentIdx + 1);
+const findSegmentedRange = (segments, start, end) => {
+	const [startSegmentIdx, prevStart, ns] = binarySearch(segments, targetCmpFnFactory(start, 'start'));
+	const [endSegmentIdx, pe, nextEnd] = binarySearch(segments, targetCmpFnFactory(end, 'end'));
+
+	const startSlice = startSegmentIdx !== -1 ? startSegmentIdx : prevStart;
+	const endSlice = endSegmentIdx !== -1 ? endSegmentIdx : nextEnd;
+
+	return segments.slice(startSlice, endSlice + 1);
 };
 
 const findRange = async (segments, start, end) => {
@@ -149,4 +170,5 @@ module.exports = {
 	findRange,
 	readSegment,
 	readSegments,
+	findSegment,
 };

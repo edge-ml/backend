@@ -14,12 +14,12 @@ const TimeSeries = new mongoose.Schema({
 		default: '',
 	},
 	levels: [{
-		size: {type: Number, required: [true, 'size must be specified']},
-		resolution: {type: Number, required: [true, 'size must be specified']},
+		resolution: {type: Number, required: [true, 'resolution must be specified']},
 		lastUpdated: { type: Number, default: 0 },
 		segments: [{
 			start: { type: Number, default: 0 },
 			end: { type: Number, default: 0 },
+			count: { type: Number, default: 0 },
 			segmentId: {
 				type: mongoose.Schema.Types.ObjectId,
 				required: [true, 'each segment in a mip level needs to be coupled to a file']

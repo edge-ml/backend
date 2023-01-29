@@ -4,7 +4,9 @@ const DatasetModel = require('../models/dataset').model;
 const ProjectModel = require('../models/project').model;
 const TimeSeriesModel = require('../models/timeSeries').model;
 
-const { findRange, readSegments, createSegmentsFromTimeseriesData } = require('../utils/segmentService');
+const {
+	findRange, readSegments, createSegmentsFromTimeseriesData, findSegment, readSegment
+} = require('../utils/segmentService');
 
 const ENABLE_MIPMAPPING = true;
 const ENABLE_POST_WINDOW_DOWNSAMPLE = true;
@@ -18,7 +20,7 @@ const DATAPOINT_CONFIG = {
 
 const lttb = downsample.createLTTB(DATAPOINT_CONFIG);
 
-async function appendData(ctx) { // TODO FIXME
+async function appendData(ctx) {
 	try {
 		const project = await ProjectModel.findOne({ _id: ctx.header.project });
 		const dataset = await DatasetModel.findOne({
@@ -36,7 +38,7 @@ async function appendData(ctx) { // TODO FIXME
 		let globalEnd;
 
 		const timeSeries = ctx.request.body;
-		const timeSeriesId = timeSeries.map((elm) => {
+		const timeSeriesUpdate = timeSeries.map((elm) => {
 			const start = Math.min(...elm.data.map(d => d.timestamp));
 			const end = Math.max(...elm.data.map(d => d.timestamp));
 			globalStart = globalStart ? Math.min(start, globalStart) : start;
@@ -50,6 +52,50 @@ async function appendData(ctx) { // TODO FIXME
 				)._id,
 			};
 		});
+
+		for (const ts of timeSeries) {
+			const start = Math.min(...ts.data.map(d => d.timestamp));
+			const end = Math.max(...ts.data.map(d => d.timestamp));
+			globalStart = globalStart ? Math.min(start, globalStart) : start;
+			globalEnd = globalEnd ? Math.max(end, globalEnd) : end;
+
+			// eslint-disable-next-line no-loop-func
+			const dsTs = dataset.timeSeries.find(tS => tS.name === ts.name);
+
+			let newSegments = null;
+			let segmentUpdates = null;
+
+			// there are some segments already
+			if (dsTs.levels[0].segments.length !== 0) {
+				segmentUpdates = dsTs.levels[0].segments.map(s => []);
+
+				for (const d of ts.data) {
+					const [target, prev, next] = findSegment(dataset.segments, d.timestamp);
+
+					if (target !== -1) {
+						segmentUpdates[target].push(d);
+					} else if (prev !== -1) {
+						// prev exist: [1 5] 7 [9 11] or [1 5] 7
+						segmentUpdates[prev].push(d);
+					} else if (next !== segmentUpdates.length) {
+						// only next exists 7 [9 11]
+						segmentUpdates[next].push(d);
+					}
+
+					throw new Error('this state should not have been reached');
+				}
+
+				// eslint-disable-next-line no-await-in-loop
+				segmentUpdates = await Promise.all(segmentUpdates.map(async (newDps, i) => {
+					// if (newDps.length === 0) return null;
+
+					// return [...(await readSegment(i)), ...newDps];
+				}));
+			} else {
+				// eslint-disable-next-line no-await-in-loop
+				newSegments = await createSegmentsFromTimeseriesData(ts.data);
+			}
+		}
 
 		// Assume all timeseris have the same timestamps
 		// const minTime = Math.min(...timeSeries[0].data.map((d) => d.timestamp));
@@ -88,7 +134,7 @@ async function appendData(ctx) { // TODO FIXME
  * get dataset timeseries by dataset id
  */
 async function getDatasetTimeseriesById(ctx) {
-	console.time('getDatasetTimeseriesById-firstpart')
+	console.time('getDatasetTimeseriesById-firstpart');
 	const project = await ProjectModel.findOne({ _id: ctx.header.project });
 	const dataset = await DatasetModel.findOne({
 		$and: [{ _id: ctx.params.datasetId }, { _id: project.datasets }],
@@ -166,8 +212,8 @@ async function getDatasetTimeseriesById(ctx) {
 		}));
 	}
 
-	console.timeEnd('getDatasetTimeseriesById-firstpart')
-	console.time('getDatasetTimeseriesById-readSegments')
+	console.timeEnd('getDatasetTimeseriesById-firstpart');
+	console.time('getDatasetTimeseriesById-readSegments');
 
 	// range
 	if (start <= dataset.start && dataset.end <= end) {
@@ -178,14 +224,14 @@ async function getDatasetTimeseriesById(ctx) {
 		allTimeseries = await Promise.all(allTimeseries.map(async ts => ({ ...ts, levels: await findRange(ts.levels, start, end) })));
 	}
 
-	console.timeEnd('getDatasetTimeseriesById-readSegments')
-	console.time('getDatasetTimeseriesById-downsample')
+	console.timeEnd('getDatasetTimeseriesById-readSegments');
+	console.time('getDatasetTimeseriesById-downsample');
 
 	if (maxResolution && ENABLE_POST_WINDOW_DOWNSAMPLE) {
 		allTimeseries = allTimeseries.map(({ levels, ...ts }) => ({ ...ts, levels: lttb(levels, maxResolution) }));
 	}
 
-	console.timeEnd('getDatasetTimeseriesById-downsample')
+	console.timeEnd('getDatasetTimeseriesById-downsample');
 
 	ctx.body = allTimeseries.map(({ levels, ...ts }) => ({ ...ts, data: levels }));
 	ctx.status = 200;
