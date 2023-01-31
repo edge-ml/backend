@@ -68,8 +68,5 @@ const addDeviceToDataBase = async (device, sensorMap) => {
 
 module.exports.addDevice = (device) => {
   const [deviceInfo, sensorMap] = preprocessDevice(device);
-  return Promise.all(deviceInfo.map(dev => {
-    console.log(dev)
-    return addDeviceToDataBase(dev, sensorMap);
-  }))
+  return addDeviceToDataBase(deviceInfo, sensorMap);
 };
