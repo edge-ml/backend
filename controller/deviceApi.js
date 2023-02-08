@@ -31,15 +31,17 @@ async function switchActive(ctx) {
   return ctx;
 }
 
+
 async function setApiKey(ctx) {
+  console.log("set key")
   const { authId } = ctx.state;
   const deviceApi = await DeviceApi.findOne({
     $and: [{ projectId: ctx.header.project }, { userId: authId }],
   });
-
-  const deviceKey = crypto.randomBytes(64).toString("base64");
+  const deviceKey = crypto.randomBytes(16).toString("hex");
   if (deviceApi) {
     deviceApi.deviceApiKey = deviceKey;
+    deviceApi.save();
   } else {
     const newDeviceApi = await DeviceApi({
       projectId: ctx.header.project,
@@ -59,6 +61,7 @@ async function getApiKey(ctx) {
   const deviceApi = await DeviceApi.findOne({
     $and: [{ projectId: ctx.header.project }, { userId: authId }],
   });
+  console.log(deviceApi)
   if (deviceApi) {
     ctx.body = { deviceApiKey: deviceApi.deviceApiKey };
     ctx.status = 200;
@@ -87,6 +90,7 @@ async function removeKey(ctx) {
   return ctx;
 }
 
+/*
 async function initDatasetIncrement(ctx) {
   try {
     const body = ctx.request.body;
@@ -510,17 +514,17 @@ async function getProject(ctx) {
     ctx.body = { error: "Failed to retrieve project." };
     return ctx;
   }
-}
+}*/
 
 module.exports = {
   setApiKey,
   removeKey,
-  uploadDataset,
+  // uploadDataset,
   switchActive,
   getApiKey,
-  initDatasetIncrement,
-  addDatasetIncrement,
-  addDatasetIncrementBatch,
-  addDatasetIncrementIot,
-  getProject,
+  // initDatasetIncrement,
+  // addDatasetIncrement,
+  // addDatasetIncrementBatch,
+  // addDatasetIncrementIot,
+  // getProject,
 };
