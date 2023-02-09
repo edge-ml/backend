@@ -1,6 +1,5 @@
 const Model = require("../models/device").model;
 const Project = require("../models/project").model;
-const Datasets = require("../models/dataset").model;
 const Sensor = require("../models/sensor").model;
 const SensorParseScheme = require("../models/sensorParseScheme").model;
 

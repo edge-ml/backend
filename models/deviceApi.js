@@ -16,13 +16,6 @@ const DeviceApi = new mongoose.Schema({
   deviceApiKey: {
     type: String,
   },
-
-  datasets: {
-      type: [{dataset: mongoose.Schema.Types.ObjectId, datasetKey: String}],
-      default: [],
-      ref: "Dataset"
-  }
-  
 });
 
 module.exports = {

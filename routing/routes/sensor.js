@@ -5,6 +5,11 @@ const controller = require('../../controller/sensor');
 
 const router = new Router();
 
+router.use(async (ctx, next) => {
+    await validate_user_project()
+})
+
+
 /**
  * get all sensors for current user
  * route:					/sensors

@@ -5,6 +5,11 @@ const controller = require('../../controller/firmware');
 
 const router = new Router();
 
+router.use(async (ctx, next) => {
+    await validate_user_project()
+})
+
+
 /**
  * get all firmware
  * route:					/firmware

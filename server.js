@@ -9,6 +9,7 @@ const fs = require("fs");
 const router = require("./routing/router.js");
 const authenticate = require("./authentication/authenticate");
 const authorize = require("./authorization/authorization");
+const {validate_user} = require("./auth/auth");
 const authorizeProjects = require("./authorization/authorization_project");
 const dbSchema = require("koa-mongoose-erd-generator");
 const deviceManager = require("./createDevices");
@@ -17,8 +18,6 @@ const bleNanoDeivce = require("./deviceSchemas/bleNano").device;
 const seeedDevice = require("./deviceSchemas/seeed").device;
 const openEarable = require("./deviceSchemas/openEarable").device;
 const openEarable_v2 = require("./deviceSchemas/openEarable_v2").device;
-
-const Datasets = require("./models/dataset").model;
 
 // create server
 const server = new Koa();
@@ -47,12 +46,6 @@ deviceManager
     console.log(err);
     process.exit();
   });
-
-// Update database
-Datasets.updateMany({ "metaData": { "$exists": false } }, {
-  metaData: {}
-}).then(elm => console.log("Updated metadata"))
-
 
   // setup koa middlewares
   server.use(cors());
@@ -90,19 +83,9 @@ server.use((ctx, next) => {
   return next();
 });
 
-// check authentication
-server.use(async (ctx, next) => {
-  await authenticate(ctx, next);
-});
-
-// check authorization
-server.use(async (ctx, next) => {
-  await authorize(ctx, next);
-});
-
-server.use(async (ctx, next) => {
-  await authorizeProjects(ctx, next);
-});
+// server.use(async (ctx, next) => {
+//   await validate_user(ctx, next);
+// })
 
 // catch errors
 server.use(async (ctx, next) => {
