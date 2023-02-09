@@ -5,6 +5,11 @@ const controller = require('../../controller/device');
 
 const router = new Router();
 
+router.use(async (ctx, next) => {
+    await validate_user_project()
+})
+
+
 /**
  * get all devices for current user
  * route:					/devices

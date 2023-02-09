@@ -5,6 +5,11 @@ const controller = require("../../controller/deviceApi");
 
 const router = new Router();
 
+router.use(async (ctx, next) => {
+  await validate_user_project()
+})
+
+
 router.get("/setKey", async (ctx) => {
   await controller.setApiKey(ctx);
 });

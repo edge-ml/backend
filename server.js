@@ -7,10 +7,6 @@ const yamljs = require("yamljs");
 const path = require("path");
 const fs = require("fs");
 const router = require("./routing/router.js");
-const authenticate = require("./authentication/authenticate");
-const authorize = require("./authorization/authorization");
-const {validate_user} = require("./auth/auth");
-const authorizeProjects = require("./authorization/authorization_project");
 const dbSchema = require("koa-mongoose-erd-generator");
 const deviceManager = require("./createDevices");
 const niclaDevice = require("./deviceSchemas/nicla").device;
@@ -82,10 +78,6 @@ server.use((ctx, next) => {
   }
   return next();
 });
-
-// server.use(async (ctx, next) => {
-//   await validate_user(ctx, next);
-// })
 
 // catch errors
 server.use(async (ctx, next) => {
