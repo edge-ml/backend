@@ -20,6 +20,7 @@
     "dependencies": {
         "@koa/cors": "^2.2.3",
         "adm-zip": "^0.5.9",
+        "amqplib": "^0.10.3",
         "axios": "^0.24.0",
         "cli-table": "^0.3.11",
         "config": "^1.30.0",

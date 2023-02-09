@@ -18,16 +18,6 @@ const Project = new mongoose.Schema({
     ref: "User",
     default: [],
   },
-  devices: {
-    type: [mongoose.Schema.Types.ObjectId],
-    ref: "Device",
-    default: [],
-  },
-  sensors: {
-    type: [mongoose.Schema.Types.ObjectId],
-    ref: "Sensor",
-    default: [],
-  },
   enableDeviceApi: {
     type: Boolean,
     default: false,
@@ -53,13 +43,6 @@ Project.pre("validate", function (next) {
 })
 
 Project.pre("remove", async function (next) {
-  await Dataset.deleteMany({ _id: { $in: this.datasets } });
-  await Experiment.deleteMany({ _id: { $in: this.experiments } });
-  await LabelDefinition.deleteMany({ _id: { $in: this.labelDefinitions } });
-  await LabelType.deleteMany({ _id: { $in: this.labelTypes } });
-  await Device.deleteMany({ _id: { $in: this.devices } });
-  await Service.deleteMany({ _id: { $in: this.services } });
-  await Sensor.deleteMany({ _id: { $in: this.sensors } });
   await Firmware.deleteMany({ _id: { $in: this.firmware } });
   await DeviceApi.deleteMany({ projectId: this._id });
   next();

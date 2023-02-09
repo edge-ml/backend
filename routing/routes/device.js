@@ -2,11 +2,12 @@ const Router      = require('koa-router');
 const KoaBody      = require('koa-body');
 
 const controller = require('../../controller/device');
+const {validate_user_project} = require('../../auth/auth')
 
 const router = new Router();
 
 router.use(async (ctx, next) => {
-    await validate_user_project()
+    await validate_user_project(ctx, next)
 })
 
 

@@ -7,7 +7,7 @@ const { validate_user_project } = require('../../auth/auth');
 const router = new Router();
 
 router.use(async (ctx, next) => {
-    await validate_user_project()
+    await validate_user_project(ctx, next)
 })
 
 router.get("/:deviceName", async (ctx) => {

@@ -36,6 +36,7 @@ const validate_user_project = async (ctx, next) => {
         return next()
     }
     catch (err) {
+        console.log(err)
         ctx.status = 401;
         ctx.body = {error: "Unauthorized"}
         return ctx;
