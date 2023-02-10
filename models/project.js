@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
-const Device = require("./device").model;
-const Sensor = require("./sensor").model;
 const Firmware = require("./firmware").model;
+const {MQ} = require("../messageBroker/publisher")
 
 const Project = new mongoose.Schema({
   admin: {
@@ -26,7 +25,6 @@ const Project = new mongoose.Schema({
 
 Project.index({ name: 1, admin: 1 }, { unique: true });
 
-const regex = new RegExp("/W");
 Project.path("name").validate(
   (value) => /^[\w, -]+$/.test(value),
   "Invalid project name"
@@ -43,8 +41,8 @@ Project.pre("validate", function (next) {
 })
 
 Project.pre("remove", async function (next) {
-  await Firmware.deleteMany({ _id: { $in: this.firmware } });
-  await DeviceApi.deleteMany({ projectId: this._id });
+  await MQ.init()
+  await MQ.send("projectDelete", this._id)
   next();
 });
 
