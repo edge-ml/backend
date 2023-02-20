@@ -21,9 +21,6 @@ const server = new Koa();
 // connect to Mongo
 mongoose.connect(config.db, { useNewUrlParser: true });
 
-// suppress deprecation warnings
-mongoose.set("useFindAndModify", false);
-mongoose.set("useCreateIndex", true);
 
 deviceManager
   .clearDevices()

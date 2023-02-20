@@ -1,5 +1,5 @@
 const Router      = require('koa-router');
-const KoaBody      = require('koa-body');
+const { koaBody } = require('koa-body');
 
 const controller = require('../../controller/user');
 const {validate_user_project} = require('../../auth/auth')
@@ -16,7 +16,7 @@ router.use(async (ctx, next) => {
  * route:					/users
  * method type: 	GET
  */
-router.get('/', KoaBody(),  async (ctx, next) => {
+router.get('/', koaBody(),  async (ctx, next) => {
 	await controller.getUsers(ctx, next);
 });
 
@@ -25,7 +25,7 @@ router.get('/', KoaBody(),  async (ctx, next) => {
  * route:					/users
  * method type: 	PUT
  */
-router.put('/', KoaBody(), async (ctx) => {
+router.put('/', koaBody(), async (ctx) => {
 	await controller.updateUser(ctx);
 });
 

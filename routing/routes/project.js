@@ -1,5 +1,5 @@
 const Router      = require('koa-router');
-const KoaBody      = require('koa-body');
+const { koaBody } = require('koa-body');
 
 const controller = require('../../controller/projects');
 const { validate_user } = require('../../auth/auth');
@@ -26,11 +26,11 @@ router.get('/:id/leave', async (ctx) => {
     await controller.leaveProjectById(ctx);
 });
 
-router.post('/', KoaBody(), async (ctx) => {
+router.post('/', koaBody(), async (ctx) => {
 	await controller.createProject(ctx);
 });
 
-router.put('/:id', KoaBody(), async (ctx) => {
+router.put('/:id', koaBody(), async (ctx) => {
     await controller.updateProjectById(ctx);
 });
 
