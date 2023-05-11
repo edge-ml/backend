@@ -13,7 +13,11 @@ const DeviceApi = new mongoose.Schema({
     ref: "User"
   },
 
-  deviceApiKey: {
+  readApiKey: {
+    type: String,
+  },
+
+  writeApiKey: {
     type: String,
   },
 });
