@@ -27,28 +27,30 @@ async function switchActive(ctx) {
   return ctx;
 }
 
-
+// Generates a random key and sets it
 async function setApiKey(ctx) {
-  console.log("set key")
   const { authId } = ctx.state;
   const deviceApi = await DeviceApi.findOne({
     $and: [{ projectId: ctx.header.project }, { userId: authId }],
   });
-  const deviceKey = crypto.randomBytes(16).toString("hex");
+  const readApiKey = crypto.randomBytes(16).toString("hex");
+  const writeApiKey = crypto.randomBytes(16).toString("hex");
   if (deviceApi) {
-    deviceApi.deviceApiKey = deviceKey;
+    deviceApi.readApiKey = readApiKey;
+    deviceApi.writeApiKey = writeApiKey;
     deviceApi.save();
   } else {
     const newDeviceApi = await DeviceApi({
       projectId: ctx.header.project,
       userId: authId,
-      deviceApiKey: deviceKey,
+      readApiKey: readApiKey,
+      writeApiKey: writeApiKey,
     });
     await newDeviceApi.save();
   }
 
   ctx.status = 200;
-  ctx.body = { deviceApiKey: deviceKey };
+  ctx.body = { readApiKey, writeApiKey };
   return ctx;
 }
 
@@ -57,12 +59,11 @@ async function getApiKey(ctx) {
   const deviceApi = await DeviceApi.findOne({
     $and: [{ projectId: ctx.header.project }, { userId: authId }],
   });
-  console.log(deviceApi)
   if (deviceApi) {
-    ctx.body = { deviceApiKey: deviceApi.deviceApiKey };
+    ctx.body = { readApiKey: deviceApi.readApiKey, writeApiKey: deviceApi.writeApiKey };
     ctx.status = 200;
   } else {
-    ctx.body = { deviceApiKey: undefined };
+    ctx.body = { readApiKey: undefined, writeApiKey: undefined };
     ctx.status = 200;
   }
   return ctx;
