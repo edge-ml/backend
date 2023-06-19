@@ -1,9 +1,15 @@
 const Router      = require('koa-router');
-const KoaBody      = require('koa-body');
+const { koaBody } = require('koa-body');
 
 const controller = require('../../controller/device');
+const {validate_user_project} = require('../../auth/auth')
 
 const router = new Router();
+
+router.use(async (ctx, next) => {
+    await validate_user_project(ctx, next)
+})
+
 
 /**
  * get all devices for current user
@@ -28,7 +34,7 @@ router.get('/:name/:generation', async (ctx) => {
  * route:					/devices
  * method type: 	POST
  */
-router.post('/', KoaBody(), async (ctx) => {
+router.post('/', koaBody(), async (ctx) => {
 	await controller.createDevice(ctx);
 });
 
@@ -37,7 +43,7 @@ router.post('/', KoaBody(), async (ctx) => {
  * route:					/devices/:id
  * method type: 	PUT
  */
-router.put('/:id', KoaBody(), async (ctx) => {
+router.put('/:id', koaBody(), async (ctx) => {
 	await controller.updateDeviceById(ctx);
 });
 

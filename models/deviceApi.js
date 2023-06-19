@@ -13,16 +13,13 @@ const DeviceApi = new mongoose.Schema({
     ref: "User"
   },
 
-  deviceApiKey: {
+  readApiKey: {
     type: String,
   },
 
-  datasets: {
-      type: [{dataset: mongoose.Schema.Types.ObjectId, datasetKey: String}],
-      default: [],
-      ref: "Dataset"
-  }
-  
+  writeApiKey: {
+    type: String,
+  },
 });
 
 module.exports = {
