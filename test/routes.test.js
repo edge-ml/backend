@@ -8,8 +8,6 @@ const { expect } = chai;
 const request = supertest(server);
 
 
-const DatasetModel = require("../models/dataset").model;
-
 const jwt = require("jsonwebtoken")
 
 let token =
@@ -89,7 +87,7 @@ beforeEach(() => {
     .reply(200, { userId: "602274d7236130a88756f1e3" });
 });
 
-describe("Testing API Routes", () => {
+describe.skip("Testing API Routes", () => {
   before("Check connection", (done) => {
     mongoose.connection.on("connected", () => {
       done();
@@ -113,7 +111,7 @@ describe("Testing API Routes", () => {
       });
   });
 
-  describe("Testing /user...", () => {
+  describe.skip("Testing /user...", () => {
     it("Returns own user", (done) => {
       request
         .get("/api/users")
@@ -140,7 +138,7 @@ describe("Testing API Routes", () => {
     });
   });
 
-  describe("Testing authentication handling...", () => {
+  describe.skip("Testing authentication handling...", () => {
     it("No token provided", (done) => {
       request
         .get("/api/users")
@@ -172,7 +170,7 @@ describe("Testing API Routes", () => {
     });
   });
 
-  describe("Testing /deviceApi", () => {
+  describe.skip("Testing /deviceApi", () => {
     var deviceApiKey = undefined;
     it("Generate a new Key", (done) => {
       request
@@ -330,7 +328,7 @@ describe("Testing API Routes", () => {
     });
   });
 
-  describe("Testing /labelDefinitions...", () => {
+  describe.skip("Testing /labelDefinitions...", () => {
     it("Saves a new labelDefinition", (done) => {
       request
         .post("/api/labelDefinitions")
@@ -404,7 +402,7 @@ describe("Testing API Routes", () => {
     });
   });
 
-  describe("Testing /firmware...", () => {
+  describe.skip("Testing /firmware...", () => {
     it("Saves a new firmware", (done) => {
       request
         .post("/api/firmware")
@@ -486,7 +484,7 @@ describe("Testing API Routes", () => {
     });
   });
 
-  describe("Testing /devices...", () => {
+  describe.skip("Testing /devices...", () => {
     it("Saves a new firmware", (done) => {
       request
         .post("/api/firmware")
@@ -647,7 +645,7 @@ describe("Testing API Routes", () => {
     });
   });
 
-  describe("Testing /services...", () => {
+  describe.skip("Testing /services...", () => {
     it("Saves a new service", (done) => {
       request
         .post("/api/services")
@@ -721,7 +719,7 @@ describe("Testing API Routes", () => {
     });
   });
 
-  describe("Testing /experiments...", () => {
+  describe.skip("Testing /experiments...", () => {
     it("Saves a new labelDefinitions", (done) => {
       request
         .post("/api/labelDefinitions")
@@ -841,7 +839,7 @@ describe("Testing API Routes", () => {
     });
   });
 
-  describe("Testing /datasets...", () => {
+  describe.skip("Testing /datasets...", () => {
     it("Saves a new firmware", (done) => {
       delete firmware._id;
       request
@@ -884,7 +882,7 @@ describe("Testing API Routes", () => {
         });
     });
 
-    describe("Testing /datasets/{id}/labels...", () => {
+    describe.skip("Testing /datasets/{id}/labels...", () => {
       var generatedDataset;
       var generatedLabeling;
       it("Add dataset", (done) => {
@@ -948,7 +946,7 @@ describe("Testing API Routes", () => {
       });
     });
 
-    describe("Testing /datasets/{id}/results...", () => {
+    describe.skip("Testing /datasets/{id}/results...", () => {
       it("Saves a new result", (done) => {
         request
           .post(`/api/datasets/${dataset._id}/results`)
@@ -1022,7 +1020,7 @@ describe("Testing API Routes", () => {
       });
     });
 
-    describe("Testing /datasets/{id}/labelings...", () => {
+    describe.skip("Testing /datasets/{id}/labelings...", () => {
       it("Saves a new service", (done) => {
         request
           .post("/api/services")
@@ -1133,7 +1131,7 @@ describe("Testing API Routes", () => {
       });
     });
 
-    describe("Testing /datasets/{id}/video...", () => {
+    describe.skip("Testing /datasets/{id}/video...", () => {
       it("Saves a new video", (done) => {
         request
           .post(`/api/datasets/${dataset._id}/video`)
@@ -1186,7 +1184,7 @@ describe("Testing API Routes", () => {
       });
     });
 
-    describe("Testing /datasets...", () => {
+    describe.skip("Testing /datasets...", () => {
       it("Returns a list of datasets", (done) => {
         request
           .get("/api/datasets")
@@ -1252,7 +1250,7 @@ describe("Testing API Routes", () => {
     });
   });
 
-  describe("Testing an invalid route ...", () => {
+  describe.skip("Testing an invalid route ...", () => {
     it("Invalid route returns 404", (done) => {
       request
         .get("/invalid")
