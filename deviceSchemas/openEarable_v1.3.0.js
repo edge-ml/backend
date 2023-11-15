@@ -27,6 +27,12 @@ exports.device = {
       'type-name': 'single_float',
       sampleRate: 10
     },
+    4: {
+        name: 'Magnet',
+        type: 0,
+        'type-name': 'xyz',
+        sampleRate: 10
+    }
   },
   parseSchema: {
     types: [
@@ -46,5 +52,5 @@ exports.device = {
       },
     ],
   },
-  deviceInfo: {name: "Earable", generation: "1", maxSampleRate: 30}
+  deviceInfo: {name: "OpenEarable", generation: "1", maxSampleRate: 30, basicEdgeMLArduinoFirmware: false}
 };
