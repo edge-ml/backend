@@ -17,10 +17,14 @@ const Device = new mongoose.Schema({
 	maxSampleRate: {
 		type: Number,
 		required: true
+	},
+	basicEdgeMLArduinoFirmware: {
+		type: Boolean,
+		required: true
 	}
 });
 
-Device.index({"name": 1, "generation": 1}, {unique: true});
+Device.index({ "name": 1, "generation": 1 }, { unique: true });
 
 module.exports = {
 	model: mongoose.model('Device', Device),

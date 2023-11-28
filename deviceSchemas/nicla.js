@@ -128,5 +128,5 @@ exports.device = {
       },
     ],
   },
-  deviceInfo: { name: "NICLA", generation: "1", maxSampleRate: 30 },
+  deviceInfo: { name: "NICLA", generation: "1", maxSampleRate: 30, basicEdgeMLArduinoFirmware: true },
 };
