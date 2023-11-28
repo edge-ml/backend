@@ -12,7 +12,8 @@ const deviceManager = require("./createDevices");
 const niclaDevice = require("./deviceSchemas/nicla").device;
 const bleNanoDeivce = require("./deviceSchemas/bleNano").device;
 const seeedDevice = require("./deviceSchemas/seeed").device;
-const openEarable_v13 = require("./deviceSchemas/openEarable_v1.3.0.js").device;
+const openEarable_v13 = require("./deviceSchemas/openEarable_v1.3.0.js").device;=
+const bleNanoV2 = require("./deviceSchemas/bleNanoV2.js").device
 
 // create server
 const server = new Koa();
@@ -28,7 +29,8 @@ deviceManager
       [deviceManager.addDevice(niclaDevice)],
       deviceManager.addDevice(bleNanoDeivce),
       deviceManager.addDevice(seeedDevice),
-      deviceManager.addDevice(openEarable_v13)
+      deviceManager.addDevice(openEarable_v13),
+      [deviceManager.addDevice(bleNanoV2)]
     ).then(() => {
       console.log("Added devices");
     });
