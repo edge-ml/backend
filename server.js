@@ -12,7 +12,7 @@ const deviceManager = require("./createDevices");
 const niclaDevice = require("./deviceSchemas/nicla").device;
 const bleNanoDeivce = require("./deviceSchemas/bleNano").device;
 const seeedDevice = require("./deviceSchemas/seeed").device;
-const openEarable_v13 = require("./deviceSchemas/openEarable_v1.3.0.js").device;=
+const openEarable_v13 = require("./deviceSchemas/openEarable_v1.3.0.js").device
 const bleNanoV2 = require("./deviceSchemas/bleNanoV2.js").device
 
 // create server
