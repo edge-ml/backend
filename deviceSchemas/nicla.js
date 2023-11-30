@@ -97,9 +97,9 @@ exports.device = {
         id: 5,
         type: "xyz",
         "parse-scheme": [
-          { name: "x", type: "int16", "scale-factor": 1 },
-          { name: "y", type: "int16", "scale-factor": 1 },
-          { name: "z", type: "int16", "scale-factor": 1 },
+          { name: "x", type: "float", "scale-factor": 1 },
+          { name: "y", type: "float", "scale-factor": 1 },
+          { name: "z", type: "float", "scale-factor": 1 },
         ],
       },
 
@@ -107,9 +107,9 @@ exports.device = {
         id: 6,
         type: "orientation",
         "parse-scheme": [
-          { name: "heading", type: "int16", "scale-factor": 0.01098 },
-          { name: "pitch", type: "int16", "scale-factor": 0.01098 },
-          { name: "roll", type: "int16", "scale-factor": 0.01098 },
+          { name: "heading", type: "float", "scale-factor": 0.01098 },
+          { name: "pitch", type: "float", "scale-factor": 0.01098 },
+          { name: "roll", type: "float", "scale-factor": 0.01098 },
         ],
       },
 
