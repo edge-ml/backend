@@ -1,5 +1,5 @@
 const Koa = require("koa");
-const config = require("config");
+const config = require("./config")
 const mongoose = require("mongoose");
 const cors = require("koa-cors");
 const koaSwagger = require("koa2-swagger-ui").koaSwagger;
@@ -19,7 +19,8 @@ const bleNanoV2 = require("./deviceSchemas/bleNanoV2.js").device
 const server = new Koa();
 
 // connect to Mongo
-mongoose.connect(config.db, { useNewUrlParser: true });
+mongoose.connect(config.DATABASE_URI + config.DB_COLLECTION_BACKEND, { useNewUrlParser: true });
+
 
 
 deviceManager

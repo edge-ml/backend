@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const Project = require("../models/project").model;
 const axios = require("axios");
-const config = require("config");
+const config = require("../config");
 
 function filterProjectNonAdmin(ctx, project) {
   const { authId } = ctx.state;
@@ -20,7 +20,7 @@ async function addUserNamesAndCleanProject(retrievedProjects, ctx) {
     await Promise.all(
       retrievedProjects.map((project) => {
         return axios.post(
-          config.auth + "/userName",
+          config.AUTH_URI + "/userName",
           [project.admin, ...project.users],
           { headers: { Authorization: ctx.headers.authorization } }
         );

@@ -1,4 +1,4 @@
-const config = require("config");
+const config = require("./config");
 const mongoose = require("mongoose");
 const DeviceModel = require("./models/device").model;
 const SensorModel = require("./models/sensor").model;
@@ -41,7 +41,7 @@ const preprocessDevice = (device) => {
 
 const addDeviceToDataBase = async (device, sensorMap) => {
   return mongoose
-    .connect(config.db, { useNewUrlParser: true })
+    .connect(config.DATABASE_URI + config.DB_COLLECTION_BACKEND, { useNewUrlParser: true })
     .then(() => {
       const mainGeneration = String(device.generation).split(".")[0];
       return DeviceModel.findOneAndUpdate({ name: device.name, generation: mainGeneration }, device, {

@@ -6,14 +6,14 @@ const Projects = require("./models/project").model;
 const LabelDefinitions = require("./models/labelDefinition").model;
 const Labels = require("./models/labelType").model;
 
-const config = require("config");
+const config = require("./config");
 
 const avg = (arr) => arr.reduce( ( p, c ) => p + c, 0 ) / arr.length;
 
 const table_data = [];
 
 (async () => {
-  await mongoose.connect(config.db, { useNewUrlParser: true });
+  await mongoose.connect(config.DATABASE_URI + DB_COLLECTION_BACKEND, { useNewUrlParser: true });
 
   const numProjects = await Projects.count({});
   table_data.push(["#Projects", numProjects]);
