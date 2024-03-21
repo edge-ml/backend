@@ -1,5 +1,5 @@
 const Koa = require("koa");
-const config = require("./config")
+const config = require("./config");
 const mongoose = require("mongoose");
 const cors = require("koa-cors");
 const koaSwagger = require("koa2-swagger-ui").koaSwagger;
@@ -12,16 +12,26 @@ const deviceManager = require("./createDevices");
 const niclaDevice = require("./deviceSchemas/nicla").device;
 const bleNanoDeivce = require("./deviceSchemas/bleNano").device;
 const seeedDevice = require("./deviceSchemas/seeed").device;
-const openEarable_v13 = require("./deviceSchemas/openEarable_v1.3.0.js").device
-const bleNanoV2 = require("./deviceSchemas/bleNanoV2.js").device
+const openEarable_v13 = require("./deviceSchemas/openEarable_v1.3.0.js").device;
+const bleNanoV2 = require("./deviceSchemas/bleNanoV2.js").device;
+const {MQ} = require("./messageBroker/publisher")
 
 // create server
 const server = new Koa();
 
 // connect to Mongo
-mongoose.connect(config.DATABASE_URI + config.DB_COLLECTION_BACKEND, { useNewUrlParser: true });
+mongoose.connect(config.DATABASE_URI + config.DB_COLLECTION_BACKEND, {
+  useNewUrlParser: true,
+});
 
-
+// Connect to RabbitMQ
+console.log("Connecting to RabbitMQ...")
+MQ.init()
+  .then(() => console.log("Init RabiitMQ successful"))
+  .catch((err) => {
+    console.log("Could not connect to RabiitMQ.");
+    System.exit(1);
+  });
 
 deviceManager
   .clearDevices()
@@ -41,8 +51,8 @@ deviceManager
     process.exit();
   });
 
-  // setup koa middlewares
-  server.use(cors());
+// setup koa middlewares
+server.use(cors());
 
 // Serve documentation
 server.use(
