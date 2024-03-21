@@ -30,7 +30,7 @@ MQ.init()
   .then(() => console.log("Init RabiitMQ successful"))
   .catch((err) => {
     console.log("Could not connect to RabiitMQ.");
-    System.exit(1);
+    process.exit(1);
   });
 
 deviceManager
