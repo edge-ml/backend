@@ -22,7 +22,10 @@ const server = new Koa();
 // connect to Mongo
 mongoose.connect(config.DATABASE_URI + config.DB_COLLECTION_BACKEND, {
   useNewUrlParser: true,
-});
+}).catch(err => {
+  console.log("Could not connect to mongodb");
+  process.exit(1);
+})
 
 // Connect to RabbitMQ
 console.log("Connecting to RabbitMQ...")
@@ -92,6 +95,7 @@ server.use(async (ctx, next) => {
   try {
     await next();
   } catch (error) {
+    console.log(error);
     ctx.body = { error: error.message };
     ctx.status = error.status || 500;
   }
