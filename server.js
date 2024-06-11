@@ -15,9 +15,11 @@ const seeedDevice = require("./deviceSchemas/seeed").device;
 const openEarable_v13 = require("./deviceSchemas/openEarable_v1.3.0.js").device;
 const bleNanoV2 = require("./deviceSchemas/bleNanoV2.js").device;
 const {MQ} = require("./messageBroker/publisher")
+const logger = require('koa-logger');
 
 // create server
 const server = new Koa();
+server.use(logger())
 
 // connect to Mongo
 mongoose.connect(config.DATABASE_URI + config.DB_COLLECTION_BACKEND, {
