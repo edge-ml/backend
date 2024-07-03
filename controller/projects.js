@@ -8,11 +8,11 @@ function filterProjectNonAdmin(ctx, project) {
   return authId === String(project.admin._id)
     ? project
     : {
-      name: project.name,
-      _id: project._id,
-      admin: project.admin,
-      enableDeviceApi: project.enableDeviceApi,
-    };
+        name: project.name,
+        _id: project._id,
+        admin: project.admin,
+        enableDeviceApi: project.enableDeviceApi,
+      };
 }
 
 async function addUserNamesAndCleanProject(retrievedProjects, ctx) {
@@ -73,7 +73,7 @@ async function getProjects(ctx, next) {
 async function createProject(ctx) {
   try {
     const project = ctx.request.body;
-    
+
     // The admin is the one creating the project
     const { authId } = ctx.state;
     project.admin = authId;
@@ -100,15 +100,16 @@ async function createProject(ctx) {
  */
 async function deleteProjectById(ctx) {
   const { authId } = ctx.state;
-  const project = await Project.findOne({
-    $and: [{ _id: ctx.params.id }, { admin: authId }],
-  });
-  if (project === undefined) {
+
+  const query = { $and: [{ _id: ctx.params.id }, { admin: authId }] };
+  const project = await Project.deleteOne(query);
+
+  // check if we could delte the project
+  if (project.deletedCount === 0) {
     ctx.body = { message: "Cannot delete this project" };
     ctx.status = 400;
     return ctx;
   }
-  await project.remove();
   ctx.body = { message: `deleted project with id: ${ctx.params.id}` };
   ctx.status = 200;
   return ctx;
@@ -194,7 +195,7 @@ async function getProjectSensorStreams(ctx) {
       ...new Set(
         datasets
           .map((dataset) => dataset.timeSeries.map((ts) => ts.name))
-          .flat(),
+          .flat()
       ),
     ],
   };
@@ -212,18 +213,18 @@ async function getProjectCustomMetaData(ctx) {
   });
 
   const datasets = await Dataset.find({ _id: project.datasets }).exec();
-  
-  const keys = [...new Set(
-    datasets.map((dataset) => [...dataset.metaData.keys()]).flat()
-  )]
+
+  const keys = [
+    ...new Set(datasets.map((dataset) => [...dataset.metaData.keys()]).flat()),
+  ];
 
   const freq = keys.reduce((acc, cur) => {
-    acc[cur] = 0
+    acc[cur] = 0;
     return acc;
-  }, {})
+  }, {});
   for (const { metaData: meta } of datasets) {
     for (const [key, _] of meta.entries()) {
-      freq[key]++
+      freq[key]++;
     }
   }
 
