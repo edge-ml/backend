@@ -11,6 +11,7 @@ router.use(async (ctx, next) => {
 })
 
 router.get('/', async (ctx) => {
+    console.log("GET PROJECTS")
     await controller.getProjects(ctx);
 });
 

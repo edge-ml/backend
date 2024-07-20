@@ -57,7 +57,13 @@ deviceManager
   });
 
 // setup koa middlewares
-server.use(cors());
+server.use(cors(
+  {
+    origin: config.HOST,
+    credentials: true
+  
+  }
+));
 
 // Serve documentation
 server.use(
