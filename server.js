@@ -7,7 +7,6 @@ const yamljs = require("yamljs");
 const path = require("path");
 const fs = require("fs");
 const router = require("./routing/router.js");
-const dbSchema = require("koa-mongoose-erd-generator");
 const deviceManager = require("./createDevices");
 const niclaDevice = require("./deviceSchemas/nicla").device;
 const bleNanoDeivce = require("./deviceSchemas/bleNano").device;
@@ -65,14 +64,6 @@ server.use(cors(
   }
 ));
 
-// Serve documentation
-server.use(
-  dbSchema(
-    "/api/docs/db",
-    { modelsPath: __dirname + "/models", nameColor: "#007bff" },
-    __dirname + "/docs/dbSchema.html"
-  )
-);
 
 const spec = yamljs.load("./docs/docs.yaml");
 server.use(
