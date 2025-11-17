@@ -1,4 +1,6 @@
 const amqplib = require('amqplib');
+const config = require("../config");
+
 
 var conn = null;
 var channel = null;
@@ -9,10 +11,8 @@ const channelName = "edgeml"
 const MQ = {
     init: async () => {
         if (channel == null) {
-            conn = await amqplib.connect("amqp://localhost:5672");
+            conn = await amqplib.connect(config.RABBITMQ_URI);
             channel = await conn.createChannel(channelName);
-            console.log(conn)
-            console.log(channel)
         }
     },
     close: async () => {

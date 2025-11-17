@@ -1,4 +1,0 @@
-{
-	"db": "mongodb://mongo:27017/backend_live",
-	"auth": "http://explorer-authentication:3002/auth"
-}

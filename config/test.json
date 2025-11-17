@@ -1,4 +1,0 @@
-{
-    "db": "mongodb://localhost:27017/backend_test",
-    "auth": "http://explorer.dmz.teco.edu/auth"
-}

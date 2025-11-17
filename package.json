@@ -1,7 +1,7 @@
 {
     "name": "backend",
     "version": "0.0.1",
-    "description": "Backend for Explorer",
+    "description": "Backend for edge-ml",
     "main": "server.js",
     "scripts": {
         "start": "node server.js",
@@ -11,51 +11,28 @@
         "test": "NODE_ENV=test nyc mocha --exit",
         "createDevices": "node createDevices.js"
     },
-    "repository": {
-        "url": "https://github.com/teco-kit/explorer-backend",
-        "type": "git"
-    },
-    "author": "Jennifer Münk <muenk@teco.edu>",
+    "author": "Tobias King <king@teco.edu>",
     "license": "MIT",
     "dependencies": {
-        "@koa/cors": "^4.0.0",
-        "adm-zip": "^0.5.10",
-        "amqplib": "^0.10.3",
-        "axios": "^1.3.3",
-        "cli-table": "^0.3.11",
-        "config": "^3.3.9",
-        "dotenv": "^16.0.3",
+        "adm-zip": "^0.5.16",
+        "amqplib": "^0.10.5",
+        "axios": "^1.8.4",
+        "config": "^3.3.12",
+        "dotenv": "^16.4.7",
         "downsample": "^1.4.0",
-        "eslint_d": "^12.2.1",
-        "hat": "*",
-        "jsonwebtoken": "^9.0.0",
-        "koa": "^2.14.1",
+        "jsonwebtoken": "^9.0.2",
+        "koa": "^2.16.0",
         "koa-body": "^6.0.1",
-        "koa-bodyparser": "^4.3.0",
-        "koa-convert": "^2.0.0",
+        "koa-cookie": "^1.0.0",
         "koa-cors": "0.0.16",
-        "koa-jwt": "^4.0.4",
         "koa-logger": "^3.2.1",
-        "koa-mongoose-erd-generator": "^0.0.7",
-        "koa-mount": "^4.0.0",
-        "koa-router": "^12.0.0",
-        "koa-static": "^5.0.0",
+        "koa-router": "^13.0.1",
         "koa2-swagger-ui": "*",
-        "mongoose": "^6.9.2",
-        "request": "^2.88.2",
-        "table": "^6.8.1",
+        "mongoose": "^8.13.0",
+        "table": "^6.9.0",
         "yamljs": "^0.3.0"
     },
     "devDependencies": {
-        "chai": "^4.3.7",
-        "eslint": "^8.34.0",
-        "eslint-config-airbnb": "^19.0.4",
-        "eslint-plugin-import": "^2.27.5",
-        "eslint-plugin-node": "^11.1.0",
-        "mocha": "^10.2.0",
-        "nock": "^13.3.0",
-        "nyc": "^15.1.0",
-        "sinon": "^15.0.1",
-        "supertest": "^6.3.3"
+        "eslint": "^9.23.0"
     }
 }

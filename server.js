@@ -1,5 +1,5 @@
 const Koa = require("koa");
-const config = require("config");
+const config = require("./config");
 const mongoose = require("mongoose");
 const cors = require("koa-cors");
 const koaSwagger = require("koa2-swagger-ui").koaSwagger;
@@ -7,20 +7,35 @@ const yamljs = require("yamljs");
 const path = require("path");
 const fs = require("fs");
 const router = require("./routing/router.js");
-const dbSchema = require("koa-mongoose-erd-generator");
 const deviceManager = require("./createDevices");
 const niclaDevice = require("./deviceSchemas/nicla").device;
 const bleNanoDeivce = require("./deviceSchemas/bleNano").device;
 const seeedDevice = require("./deviceSchemas/seeed").device;
-const openEarable = require("./deviceSchemas/openEarable").device;
-const openEarable_v2 = require("./deviceSchemas/openEarable_v2").device;
+const openEarable_v13 = require("./deviceSchemas/openEarable_v1.3.0.js").device;
+const bleNanoV2 = require("./deviceSchemas/bleNanoV2.js").device;
+const {MQ} = require("./messageBroker/publisher")
+const logger = require('koa-logger');
 
 // create server
 const server = new Koa();
+server.use(logger())
 
 // connect to Mongo
-mongoose.connect(config.db, { useNewUrlParser: true });
+mongoose.connect(config.DATABASE_URI + config.DB_COLLECTION_BACKEND, {
+  useNewUrlParser: true,
+}).catch(err => {
+  console.log("Could not connect to mongodb");
+  process.exit(1);
+})
 
+// Connect to RabbitMQ
+console.log("Connecting to RabbitMQ...")
+MQ.init()
+  .then(() => console.log("Init RabiitMQ successful"))
+  .catch((err) => {
+    console.log("Could not connect to RabiitMQ.");
+    process.exit(1);
+  });
 
 deviceManager
   .clearDevices()
@@ -29,8 +44,8 @@ deviceManager
       [deviceManager.addDevice(niclaDevice)],
       deviceManager.addDevice(bleNanoDeivce),
       deviceManager.addDevice(seeedDevice),
-      deviceManager.addDevice(openEarable),
-      deviceManager.addDevice(openEarable_v2)
+      deviceManager.addDevice(openEarable_v13),
+      [deviceManager.addDevice(bleNanoV2)]
     ).then(() => {
       console.log("Added devices");
     });
@@ -40,17 +55,15 @@ deviceManager
     process.exit();
   });
 
-  // setup koa middlewares
-  server.use(cors());
+// setup koa middlewares
+server.use(cors(
+  {
+    origin: config.HOST,
+    credentials: true
+  
+  }
+));
 
-// Serve documentation
-server.use(
-  dbSchema(
-    "/api/docs/db",
-    { modelsPath: __dirname + "/models", nameColor: "#007bff" },
-    __dirname + "/docs/dbSchema.html"
-  )
-);
 
 const spec = yamljs.load("./docs/docs.yaml");
 server.use(
@@ -81,6 +94,7 @@ server.use(async (ctx, next) => {
   try {
     await next();
   } catch (error) {
+    console.log(error);
     ctx.body = { error: error.message };
     ctx.status = error.status || 500;
   }

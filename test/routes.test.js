@@ -8,6 +8,8 @@ const { expect } = chai;
 const request = supertest(server);
 
 
+const DatasetModel = require("../models/dataset").model;
+
 const jwt = require("jsonwebtoken")
 
 let token =

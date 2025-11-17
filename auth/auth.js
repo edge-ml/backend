@@ -1,18 +1,20 @@
-const config = require('config');
+const config = require('../config');
 const jwt = require('jsonwebtoken');
 const ProjectModel = require("../models/project").model;
 
 
 const validate_user = async (ctx, next) => {
     try {
-        const token = ctx.headers.authorization.split(' ')[1]
-        const user_id = jwt.verify(token, config.secret).id
+
+        console.log(ctx.cookies.get("jwt"))
+        const token = ctx.cookies.get("jwt")
+        const user_id = jwt.verify(token, config.SECRET_KEY).id
         ctx.state.authId = user_id;
         return next()
     }
     catch (err) {
         ctx.status = 401;
-        ctx.body = {error: "Unauthorized"}
+        ctx.body = { error: "Unauthorized" }
         return ctx;
     }
 }
@@ -22,12 +24,12 @@ const validate_user_project = async (ctx, next) => {
         const projectId = ctx.header.project;
         if (!projectId) {
             ctx.status = 400;
-            ctx.body = {error: "Missing project header"}
+            ctx.body = { error: "Missing project header" }
         }
-        const token = ctx.headers.authorization.split(' ')[1]
-        const user_id = jwt.verify(token, config.secret).id
-        
-        const project = ProjectModel.find({$and: [{_id: projectId}, {$or: {users: user_id, admin: user_id}}]})
+        const token = ctx.cookies.get("jwt")
+        const user_id = jwt.verify(token, config.SECRET_KEY).id
+
+        const project = ProjectModel.find({ $and: [{ _id: projectId }, { $or: { users: user_id, admin: user_id } }] })
         if (!project) {
             throw new Error()
         }
@@ -38,7 +40,7 @@ const validate_user_project = async (ctx, next) => {
     catch (err) {
         console.log(err)
         ctx.status = 401;
-        ctx.body = {error: "Unauthorized"}
+        ctx.body = { error: "Unauthorized" }
         return ctx;
     }
 }

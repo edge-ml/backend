@@ -50,8 +50,8 @@ exports.device = {
 
     8: {
       name: "PROXIMITY",
-      type: 3,
-      "type-name": "single_int",
+      type: 4,
+      "type-name": "uint_8",
     },
     /*
     9: {
@@ -93,7 +93,13 @@ exports.device = {
         type: "single_int",
         "parse-scheme": [{ name: "val", type: "int16", "scale-factor": 1 }],
       },
+
+      {
+        id: 4,
+        type: "uint_8",
+        "parse-scheme": [{ name: "val", type: "uint8", "scale-factor": 1 }],
+      },
     ],
   },
-  deviceInfo: { name: "NANO", generation: 1, maxSampleRate: 30, basicEdgeMLArduinoFirmware: true },
+  deviceInfo: { name: "NanoV2", generation: 1, maxSampleRate: 30, basicEdgeMLArduinoFirmware: true },
 };

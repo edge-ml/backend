@@ -41,7 +41,7 @@ Project.pre("validate", function (next) {
 })
 
 Project.pre("remove", async function (next) {
-  await MQ.init()
+  // await MQ.init()
   await MQ.send("projectDelete", this._id)
   next();
 });

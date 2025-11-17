@@ -1,5 +1,0 @@
-{
-	"db": "mongodb://localhost:27017/backend_dev",
-	"auth": "http://localhost:3002/auth",
-	"secret": "default_secret" 
-}
