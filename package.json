@@ -33,6 +33,12 @@
         "yamljs": "^0.3.0"
     },
     "devDependencies": {
-        "eslint": "^9.23.0"
+        "chai": "^4.4.1",
+        "eslint": "^9.23.0",
+        "mocha": "^10.8.2",
+        "nock": "^13.5.6",
+        "nyc": "^17.1.0",
+        "sinon": "^19.0.2",
+        "supertest": "^7.1.0"
     }
 }
